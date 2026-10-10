@@ -1,41 +1,107 @@
 /* =========================================================
-   Super Fun Tic-Tac-Toe - Game Engine & Interactions
-   Kids Edition: Audio Synth, Confetti, Smart Bot & Themes
+   Super Fun Tic-Tac-Toe - Tablet & Kids Edition Game Engine
+   Featuring: Tablet Optimization, Star Bank & Reward Badges!
    ========================================================= */
 
 // --- THEMES CONFIGURATION ---
 const THEMES = {
   pets: {
-    name: 'Pets',
-    p1: { symbol: '🐶', name: 'Puppy' },
-    p2: { symbol: '🐱', name: 'Kitty' }
+    name: '萌宠王国',
+    p1: { symbol: '🐶', name: '小狗' },
+    p2: { symbol: '🐱', name: '小猫' }
   },
   space: {
-    name: 'Space',
-    p1: { symbol: '🚀', name: 'Rocket' },
-    p2: { symbol: '👽', name: 'Alien' }
+    name: '星际太空',
+    p1: { symbol: '🚀', name: '火箭' },
+    p2: { symbol: '👽', name: '外星人' }
   },
   dino: {
-    name: 'Dinos',
-    p1: { symbol: '🦖', name: 'T-Rex' },
-    p2: { symbol: '🌋', name: 'Volcano' }
+    name: '恐龙探险',
+    p1: { symbol: '🦖', name: '暴龙' },
+    p2: { symbol: '🌋', name: '火山' }
   },
   magic: {
-    name: 'Magic',
-    p1: { symbol: '🦄', name: 'Unicorn' },
-    p2: { symbol: '🌈', name: 'Rainbow' }
+    name: '魔法独角兽',
+    p1: { symbol: '🦄', name: '独角兽' },
+    p2: { symbol: '🌈', name: '彩虹' }
   },
   sweet: {
-    name: 'Treats',
-    p1: { symbol: '🍦', name: 'Ice Cream' },
-    p2: { symbol: '🍩', name: 'Donut' }
+    name: '甜蜜甜点',
+    p1: { symbol: '🍦', name: '冰淇淋' },
+    p2: { symbol: '🍩', name: '甜甜圈' }
+  },
+  sea: {
+    name: '深海萌友',
+    p1: { symbol: '🐳', name: '小蓝鲸' },
+    p2: { symbol: '🦀', name: '小红蟹' }
   },
   classic: {
-    name: 'Classic',
-    p1: { symbol: '❌', name: 'Cross' },
-    p2: { symbol: '⭕', name: 'Circle' }
+    name: '经典符号',
+    p1: { symbol: '❌', name: '红叉' },
+    p2: { symbol: '⭕', name: '蓝圈' }
   }
 };
+
+// --- REWARD BADGES CONFIGURATION ---
+const BADGES_CONFIG = [
+  {
+    id: 'first_win',
+    emoji: '🎈',
+    title: '初出茅庐',
+    desc: '赢得第 1 场棋局胜利'
+  },
+  {
+    id: 'streak_3',
+    emoji: '🔥',
+    title: '连胜小霸王',
+    desc: '势如破竹达成 3 连胜'
+  },
+  {
+    id: 'streak_5',
+    emoji: '⚡',
+    title: '无敌连胜王',
+    desc: '所向披靡达成 5 连胜'
+  },
+  {
+    id: 'bot_win',
+    emoji: '🤖',
+    title: '智斗小机灵',
+    desc: '在单人模式战胜机器人'
+  },
+  {
+    id: 'hard_bot',
+    emoji: '🦉',
+    title: '智慧小军师',
+    desc: '击败大师级智慧猫头鹰'
+  },
+  {
+    id: 'theme_fan',
+    emoji: '🎨',
+    title: '百变换装达人',
+    desc: '体验 3 种不同角色主题'
+  },
+  {
+    id: 'star_20',
+    emoji: '⭐',
+    title: '闪耀收藏家',
+    desc: '星星罐累计达到 20 颗星星'
+  },
+  {
+    id: 'king_10',
+    emoji: '👑',
+    title: '棋盘大统领',
+    desc: '累计获得 10 次棋局胜利'
+  }
+];
+
+// --- PLAYER RANKS & TITLES ---
+const RANKS = [
+  { minStars: 0, title: '棋艺小萌芽', avatar: '🌱', nextStars: 10 },
+  { minStars: 10, title: '探索小新星', avatar: '🥉', nextStars: 25 },
+  { minStars: 25, title: '进阶小高手', avatar: '🥈', nextStars: 50 },
+  { minStars: 50, title: '智慧小棋王', avatar: '🥇', nextStars: 100 },
+  { minStars: 100, title: '终极棋圣', avatar: '👑', nextStars: 9999 }
+];
 
 const WINNING_COMBOS = [
   [0, 1, 2],
@@ -48,7 +114,7 @@ const WINNING_COMBOS = [
   [2, 4, 6]
 ];
 
-// --- SOUND ENGINE (Web Audio API - No external assets required!) ---
+// --- WEB AUDIO SYNTHESIZER ---
 class SoundController {
   constructor() {
     this.ctx = null;
@@ -77,7 +143,7 @@ class SoundController {
 
     osc.type = 'sine';
     const now = this.ctx.currentTime;
-    const baseFreq = player === 'X' ? 440 : 580; // Different pitch for each player
+    const baseFreq = player === 'X' ? 440 : 587.33;
 
     osc.frequency.setValueAtTime(baseFreq, now);
     osc.frequency.exponentialRampToValueAtTime(baseFreq * 1.8, now + 0.12);
@@ -97,7 +163,6 @@ class SoundController {
     this.init();
     if (!this.ctx) return;
 
-    // Cheerful arpeggio fanfare: C5, E5, G5, C6
     const notes = [523.25, 659.25, 783.99, 1046.50];
     const now = this.ctx.currentTime;
 
@@ -110,8 +175,35 @@ class SoundController {
       const duration = idx === notes.length - 1 ? 0.45 : 0.15;
 
       osc.frequency.setValueAtTime(freq, startTime);
-
       gain.gain.setValueAtTime(0.28, startTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, startTime + duration);
+
+      osc.connect(gain);
+      gain.connect(this.ctx.destination);
+
+      osc.start(startTime);
+      osc.stop(startTime + duration);
+    });
+  }
+
+  playStarChime() {
+    if (!this.enabled) return;
+    this.init();
+    if (!this.ctx) return;
+
+    const notes = [880, 1174.66, 1318.51, 1760];
+    const now = this.ctx.currentTime;
+
+    notes.forEach((freq, idx) => {
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+
+      osc.type = 'sine';
+      const startTime = now + idx * 0.08;
+      const duration = 0.25;
+
+      osc.frequency.setValueAtTime(freq, startTime);
+      gain.gain.setValueAtTime(0.2, startTime);
       gain.gain.exponentialRampToValueAtTime(0.001, startTime + duration);
 
       osc.connect(gain);
@@ -127,7 +219,6 @@ class SoundController {
     this.init();
     if (!this.ctx) return;
 
-    // Playful slide down wobble
     const osc = this.ctx.createOscillator();
     const gain = this.ctx.createGain();
     const now = this.ctx.currentTime;
@@ -170,7 +261,7 @@ class SoundController {
   }
 }
 
-// --- CONFETTI PARTICLE SYSTEM ---
+// --- CONFETTI CANNON SYSTEM ---
 class ConfettiCannon {
   constructor(canvasId) {
     this.canvas = document.getElementById(canvasId);
@@ -187,18 +278,18 @@ class ConfettiCannon {
     this.canvas.height = window.innerHeight;
   }
 
-  burst(count = 90) {
+  burst(count = 100) {
     const colors = ['#ff4081', '#00b4d8', '#ffd166', '#06d6a0', '#9d4edd', '#ff9f1c'];
     for (let i = 0; i < count; i++) {
       this.particles.push({
-        x: this.canvas.width / 2 + (Math.random() - 0.5) * 160,
+        x: this.canvas.width / 2 + (Math.random() - 0.5) * 200,
         y: this.canvas.height * 0.45,
-        vx: (Math.random() - 0.5) * 14,
-        vy: -Math.random() * 14 - 4,
-        size: Math.random() * 9 + 6,
+        vx: (Math.random() - 0.5) * 16,
+        vy: -Math.random() * 15 - 5,
+        size: Math.random() * 10 + 6,
         color: colors[Math.floor(Math.random() * colors.length)],
         rotation: Math.random() * 360,
-        rotationSpeed: (Math.random() - 0.5) * 12,
+        rotationSpeed: (Math.random() - 0.5) * 14,
         shape: Math.random() > 0.5 ? 'circle' : 'rect',
         opacity: 1
       });
@@ -216,8 +307,8 @@ class ConfettiCannon {
       const p = this.particles[i];
       p.x += p.vx;
       p.y += p.vy;
-      p.vy += 0.4; // gravity
-      p.vx *= 0.985; // drag
+      p.vy += 0.42;
+      p.vx *= 0.985;
       p.rotation += p.rotationSpeed;
       p.opacity -= 0.007;
 
@@ -258,11 +349,14 @@ class TicTacToeGame {
     this.board = Array(9).fill(null);
     this.currentPlayer = 'X';
     this.gameActive = true;
-    this.gameMode = 'pvp'; // 'pvp' or 'ai'
-    this.aiDifficulty = 'easy'; // 'easy', 'medium', 'hard'
+    this.gameMode = 'pvp';
+    this.aiDifficulty = 'easy';
     this.currentThemeKey = 'pets';
     this.scores = { X: 0, O: 0, ties: 0 };
     this.isBotThinking = false;
+
+    // Load persistent reward data
+    this.loadRewardsData();
 
     this.sound = new SoundController();
     this.confetti = new ConfettiCannon('confettiCanvas');
@@ -271,6 +365,42 @@ class TicTacToeGame {
     this.bindEvents();
     this.updateThemeUI();
     this.updateTurnUI();
+    this.updateRewardsUI();
+  }
+
+  loadRewardsData() {
+    try {
+      this.stars = parseInt(localStorage.getItem('ttt_stars') || '0', 10);
+      this.streak = parseInt(localStorage.getItem('ttt_streak') || '0', 10);
+      this.maxStreak = parseInt(localStorage.getItem('ttt_max_streak') || '0', 10);
+      this.totalWins = parseInt(localStorage.getItem('ttt_total_wins') || '0', 10);
+      
+      const savedBadges = localStorage.getItem('ttt_unlocked_badges');
+      this.unlockedBadges = savedBadges ? JSON.parse(savedBadges) : [];
+
+      const savedThemes = localStorage.getItem('ttt_themes_used');
+      this.themesUsed = savedThemes ? new Set(JSON.parse(savedThemes)) : new Set(['pets']);
+    } catch (e) {
+      this.stars = 0;
+      this.streak = 0;
+      this.maxStreak = 0;
+      this.totalWins = 0;
+      this.unlockedBadges = [];
+      this.themesUsed = new Set(['pets']);
+    }
+  }
+
+  saveRewardsData() {
+    try {
+      localStorage.setItem('ttt_stars', this.stars.toString());
+      localStorage.setItem('ttt_streak', this.streak.toString());
+      localStorage.setItem('ttt_max_streak', this.maxStreak.toString());
+      localStorage.setItem('ttt_total_wins', this.totalWins.toString());
+      localStorage.setItem('ttt_unlocked_badges', JSON.stringify(this.unlockedBadges));
+      localStorage.setItem('ttt_themes_used', JSON.stringify(Array.from(this.themesUsed)));
+    } catch (e) {
+      console.warn('Storage saving failed', e);
+    }
   }
 
   cacheDOMElements() {
@@ -279,6 +409,15 @@ class TicTacToeGame {
     this.statusBanner = document.getElementById('statusBanner');
     this.statusEmoji = document.getElementById('statusEmoji');
     this.statusText = document.getElementById('statusText');
+
+    // Header & Rewards
+    this.headerStarCount = document.getElementById('headerStarCount');
+    this.openRewardBtn = document.getElementById('openRewardBtn');
+    this.playerRankAvatar = document.getElementById('playerRankAvatar');
+    this.playerRankTitle = document.getElementById('playerRankTitle');
+    this.streakText = document.getElementById('streakText');
+    this.rankProgressBar = document.getElementById('rankProgressBar');
+    this.rankProgressLabel = document.getElementById('rankProgressLabel');
 
     // Scoreboard
     this.cardPlayerX = document.getElementById('cardPlayerX');
@@ -303,12 +442,24 @@ class TicTacToeGame {
     this.resetRoundBtn = document.getElementById('resetRoundBtn');
     this.resetScoresBtn = document.getElementById('resetScoresBtn');
 
-    // Modal
-    this.modal = document.getElementById('resultModal');
+    // Win Modal
+    this.resultModal = document.getElementById('resultModal');
     this.modalEmoji = document.getElementById('modalEmoji');
     this.modalTitle = document.getElementById('modalTitle');
     this.modalSubtitle = document.getElementById('modalSubtitle');
+    this.rewardGainBanner = document.getElementById('rewardGainBanner');
+    this.rewardGainSub = document.getElementById('rewardGainSub');
     this.modalPlayAgainBtn = document.getElementById('modalPlayAgainBtn');
+
+    // Reward Modal
+    this.rewardModal = document.getElementById('rewardModal');
+    this.closeRewardModalBtn = document.getElementById('closeRewardModalBtn');
+    this.rewardCloseActionBtn = document.getElementById('rewardCloseActionBtn');
+    this.rewardModalStars = document.getElementById('rewardModalStars');
+    this.rewardModalWins = document.getElementById('rewardModalWins');
+    this.rewardModalBadgesCount = document.getElementById('rewardModalBadgesCount');
+    this.badgesGrid = document.getElementById('badgesGrid');
+    this.starFlyContainer = document.getElementById('starFlyContainer');
   }
 
   bindEvents() {
@@ -351,11 +502,26 @@ class TicTacToeGame {
       this.resetScores();
     });
 
-    // Modal close & play again
+    // Modals
     this.modalPlayAgainBtn.addEventListener('click', () => {
       this.sound.playClick();
-      this.closeModal();
+      this.closeResultModal();
       this.resetRound();
+    });
+
+    this.openRewardBtn.addEventListener('click', () => {
+      this.sound.playClick();
+      this.openRewardModal();
+    });
+
+    this.closeRewardModalBtn.addEventListener('click', () => {
+      this.sound.playClick();
+      this.closeRewardModal();
+    });
+
+    this.rewardCloseActionBtn.addEventListener('click', () => {
+      this.sound.playClick();
+      this.closeRewardModal();
     });
   }
 
@@ -363,9 +529,21 @@ class TicTacToeGame {
     return THEMES[this.currentThemeKey];
   }
 
+  get currentRank() {
+    for (let i = RANKS.length - 1; i >= 0; i--) {
+      if (this.stars >= RANKS[i].minStars) {
+        return RANKS[i];
+      }
+    }
+    return RANKS[0];
+  }
+
   setTheme(themeKey) {
     if (!THEMES[themeKey]) return;
     this.currentThemeKey = themeKey;
+    this.themesUsed.add(themeKey);
+    this.saveRewardsData();
+    this.checkBadges();
 
     this.themeChips.forEach(chip => {
       chip.classList.toggle('active', chip.dataset.theme === themeKey);
@@ -383,7 +561,7 @@ class TicTacToeGame {
     this.namePlayerXEl.textContent = t.p1.name;
 
     if (this.gameMode === 'ai') {
-      this.namePlayerOEl.textContent = `Bot (${t.p2.name})`;
+      this.namePlayerOEl.textContent = `电脑(${t.p2.name})`;
     } else {
       this.namePlayerOEl.textContent = t.p2.name;
     }
@@ -434,25 +612,23 @@ class TicTacToeGame {
       this.sound.playClick();
       this.soundToggleBtn.classList.remove('muted');
       this.soundIcon.textContent = '🔊';
-      this.soundText.textContent = 'Sound ON';
+      this.soundText.textContent = '声音 开';
     } else {
       this.soundToggleBtn.classList.add('muted');
       this.soundIcon.textContent = '🔇';
-      this.soundText.textContent = 'Sound OFF';
+      this.soundText.textContent = '声音 关';
     }
   }
 
   handleCellClick(e) {
     const index = parseInt(e.currentTarget.dataset.index, 10);
 
-    // If cell occupied, game over, or bot currently taking its turn, do nothing
     if (this.board[index] !== null || !this.gameActive || this.isBotThinking) {
       return;
     }
 
     this.makeMove(index, this.currentPlayer);
 
-    // If vs AI and game is still going, trigger bot move
     if (this.gameActive && this.gameMode === 'ai' && this.currentPlayer === 'O') {
       this.triggerBotMove();
     }
@@ -478,7 +654,6 @@ class TicTacToeGame {
       return;
     }
 
-    // Switch turn
     this.currentPlayer = this.currentPlayer === 'X' ? 'O' : 'X';
     this.updateTurnUI();
   }
@@ -487,9 +662,8 @@ class TicTacToeGame {
     this.isBotThinking = true;
     const botName = this.theme.p2.name;
     this.statusEmoji.textContent = '🤔';
-    this.statusText.textContent = `${botName} is thinking...`;
+    this.statusText.textContent = `${botName} 正在动脑筋思考中...`;
 
-    // Kid-friendly delay (450ms) to feel like playing against a real buddy
     setTimeout(() => {
       if (!this.gameActive) {
         this.isBotThinking = false;
@@ -512,15 +686,14 @@ class TicTacToeGame {
 
     if (available.length === 0) return -1;
 
-    // EASY DIFFICULTY: 85% random silly moves, 15% smart move
+    // EASY: 85% silly moves, 15% smart move
     if (this.aiDifficulty === 'easy') {
-      const sillyRoll = Math.random();
-      if (sillyRoll < 0.85) {
+      if (Math.random() < 0.85) {
         return available[Math.floor(Math.random() * available.length)];
       }
     }
 
-    // MEDIUM & HARD: Check if bot can win immediately
+    // Check if bot can win
     for (const idx of available) {
       const copy = [...this.board];
       copy[idx] = 'O';
@@ -529,7 +702,7 @@ class TicTacToeGame {
       }
     }
 
-    // MEDIUM & HARD: Check if bot needs to block opponent's win
+    // Check if bot needs to block opponent
     for (const idx of available) {
       const copy = [...this.board];
       copy[idx] = 'X';
@@ -538,13 +711,13 @@ class TicTacToeGame {
       }
     }
 
-    // MEDIUM: Randomly pick center or corners with small chance of silly move
+    // MEDIUM:
     if (this.aiDifficulty === 'medium') {
       if (available.includes(4) && Math.random() > 0.3) return 4;
       return available[Math.floor(Math.random() * available.length)];
     }
 
-    // HARD DIFFICULTY: Minimax algorithm (unbeatable)
+    // HARD: Minimax
     return this.minimaxBestMove();
   }
 
@@ -615,7 +788,6 @@ class TicTacToeGame {
     this.scores[winner]++;
     this.updateScoreboard();
 
-    // Highlight winning cells
     combo.forEach(idx => {
       this.cells[idx].classList.add('winning-cell');
     });
@@ -623,19 +795,60 @@ class TicTacToeGame {
     const isP1 = winner === 'X';
     const winnerChar = isP1 ? this.theme.p1 : this.theme.p2;
 
+    // --- REWARDS CALCULATION ---
+    let starsEarned = 3; // Base win reward
+    let bonusText = '获胜奖励！';
+
+    if (isP1) {
+      this.totalWins++;
+      this.streak++;
+      if (this.streak > this.maxStreak) {
+        this.maxStreak = this.streak;
+      }
+
+      if (this.streak >= 2) {
+        starsEarned += 2; // Streak bonus
+        bonusText = `连胜奖励！🔥 当前 ${this.streak} 连胜！`;
+      }
+
+      if (this.gameMode === 'ai') {
+        this.unlockBadge('bot_win');
+        if (this.aiDifficulty === 'hard') {
+          this.unlockBadge('hard_bot');
+        }
+      }
+    } else {
+      // If P2 wins
+      if (this.gameMode === 'ai') {
+        this.streak = 0; // Reset streak if bot wins
+      } else {
+        this.streak = 0;
+      }
+    }
+
+    this.stars += starsEarned;
+    this.checkBadges();
+    this.saveRewardsData();
+    this.updateRewardsUI();
+
     this.sound.playWinFanfare();
-    this.confetti.burst(110);
+    setTimeout(() => this.sound.playStarChime(), 400);
+    this.confetti.burst(120);
 
     this.statusEmoji.textContent = '🏆';
-    this.statusText.textContent = `🎉 Hooray! ${winnerChar.name} Won!`;
+    this.statusText.textContent = `🎉 恭喜！${winnerChar.name} 获胜！`;
 
-    // Show celebration modal after short delay
+    // Trigger star fly animation
+    this.spawnFlyingStars(3);
+
+    // Show celebration modal
     setTimeout(() => {
-      this.showModal({
-        emoji: winnerChar.symbol,
-        title: 'Awesome Win! 🌟',
-        subtitle: `${winnerChar.name} got three in a row! Incredible job!`
-      });
+      this.modalEmoji.textContent = winnerChar.symbol;
+      this.modalTitle.textContent = `${winnerChar.name} 获胜啦！🌟`;
+      this.modalSubtitle.textContent = `连成三颗一排，真是太棒了！`;
+      this.rewardGainBanner.querySelector('.gain-stars').textContent = `⭐ +${starsEarned} 颗星星`;
+      this.rewardGainSub.textContent = bonusText;
+      this.resultModal.classList.remove('hidden');
     }, 700);
   }
 
@@ -644,17 +857,125 @@ class TicTacToeGame {
     this.scores.ties++;
     this.updateScoreboard();
 
+    // Reward for playing nicely in a tie
+    this.stars += 1;
+    this.checkBadges();
+    this.saveRewardsData();
+    this.updateRewardsUI();
+
     this.sound.playTieSound();
     this.statusEmoji.textContent = '🤝';
-    this.statusText.textContent = "It's a Tie! Super close match!";
+    this.statusText.textContent = "棋逢对手！这是一场平局！";
+
+    this.spawnFlyingStars(1);
 
     setTimeout(() => {
-      this.showModal({
-        emoji: '🤝',
-        title: "It's a Tie! 🎈",
-        subtitle: "Both players played brilliantly! Ready for a rematch?"
-      });
+      this.modalEmoji.textContent = '🤝';
+      this.modalTitle.textContent = "势均力敌，打成平局！🎈";
+      this.modalSubtitle.textContent = "两个小朋友都非常机智，难解难分！";
+      this.rewardGainBanner.querySelector('.gain-stars').textContent = "⭐ +1 颗星星";
+      this.rewardGainSub.textContent = "参与鼓励奖！准备好下一场决战了吗？";
+      this.resultModal.classList.remove('hidden');
     }, 600);
+  }
+
+  checkBadges() {
+    if (this.totalWins >= 1) this.unlockBadge('first_win');
+    if (this.streak >= 3 || this.maxStreak >= 3) this.unlockBadge('streak_3');
+    if (this.streak >= 5 || this.maxStreak >= 5) this.unlockBadge('streak_5');
+    if (this.themesUsed.size >= 3) this.unlockBadge('theme_fan');
+    if (this.stars >= 20) this.unlockBadge('star_20');
+    if (this.totalWins >= 10) this.unlockBadge('king_10');
+  }
+
+  unlockBadge(badgeId) {
+    if (!this.unlockedBadges.includes(badgeId)) {
+      this.unlockedBadges.push(badgeId);
+      this.saveRewardsData();
+    }
+  }
+
+  updateRewardsUI() {
+    this.headerStarCount.textContent = this.stars;
+    this.streakText.textContent = `当前连胜: ${this.streak} 连胜 🔥`;
+
+    const rank = this.currentRank;
+    this.playerRankAvatar.textContent = rank.avatar;
+    this.playerRankTitle.textContent = rank.title;
+
+    if (rank.nextStars === 9999) {
+      this.rankProgressBar.style.width = '100%';
+      this.rankProgressLabel.textContent = '已登顶至尊勋位！👑';
+    } else {
+      const prevMin = rank.minStars;
+      const nextTarget = rank.nextStars;
+      const progressPercent = Math.min(100, Math.max(0, ((this.stars - prevMin) / (nextTarget - prevMin)) * 100));
+      this.rankProgressBar.style.width = `${progressPercent}%`;
+      this.rankProgressLabel.textContent = `${this.stars} / ${nextTarget} 颗星星升级`;
+    }
+  }
+
+  spawnFlyingStars(count = 3) {
+    const starBtnRect = this.openRewardBtn.getBoundingClientRect();
+    const targetX = starBtnRect.left + starBtnRect.width / 2;
+    const targetY = starBtnRect.top + starBtnRect.height / 2;
+
+    for (let i = 0; i < count; i++) {
+      const star = document.createElement('div');
+      star.className = 'flying-star';
+      star.textContent = '⭐';
+      
+      const startX = window.innerWidth / 2 + (Math.random() - 0.5) * 80;
+      const startY = window.innerHeight / 2 + (Math.random() - 0.5) * 80;
+
+      star.style.left = `${startX}px`;
+      star.style.top = `${startY}px`;
+
+      this.starFlyContainer.appendChild(star);
+
+      // Animate towards the star bank in the header
+      star.animate([
+        { transform: 'translate(0, 0) scale(1.6)', opacity: 1 },
+        { transform: `translate(${targetX - startX}px, ${targetY - startY}px) scale(0.6)`, opacity: 0.9 },
+        { transform: `translate(${targetX - startX}px, ${targetY - startY}px) scale(0)`, opacity: 0 }
+      ], {
+        duration: 750 + i * 120,
+        easing: 'cubic-bezier(0.2, 0.8, 0.2, 1)',
+        fill: 'forwards'
+      });
+
+      setTimeout(() => {
+        star.remove();
+      }, 950 + i * 120);
+    }
+  }
+
+  openRewardModal() {
+    this.rewardModalStars.textContent = this.stars;
+    this.rewardModalWins.textContent = this.totalWins;
+    this.rewardModalBadgesCount.textContent = `${this.unlockedBadges.length} / ${BADGES_CONFIG.length}`;
+
+    // Render badges list
+    this.badgesGrid.innerHTML = '';
+    BADGES_CONFIG.forEach(badge => {
+      const isUnlocked = this.unlockedBadges.includes(badge.id);
+      const card = document.createElement('div');
+      card.className = `badge-card ${isUnlocked ? 'unlocked' : 'locked'}`;
+
+      card.innerHTML = `
+        <div class="badge-emoji">${isUnlocked ? badge.emoji : '🔒'}</div>
+        <div class="badge-title">${badge.title}</div>
+        <div class="badge-desc">${isUnlocked ? badge.desc : '未解锁：' + badge.desc}</div>
+      `;
+
+      this.badgesGrid.appendChild(card);
+    });
+
+    this.rewardModal.classList.remove('hidden');
+  }
+
+  closeRewardModal() {
+    this.rewardModal.classList.add('hidden');
   }
 
   updateTurnUI() {
@@ -666,9 +987,9 @@ class TicTacToeGame {
 
     this.statusEmoji.textContent = char.symbol;
     if (this.gameMode === 'ai' && !isP1) {
-      this.statusText.textContent = `${char.name} is making a move...`;
+      this.statusText.textContent = `${char.name} 正在认真思考...`;
     } else {
-      this.statusText.textContent = `${char.name}'s turn! Pick a square!`;
+      this.statusText.textContent = `轮到 ${char.name} 啦！快点选格子下棋！`;
     }
   }
 
@@ -698,15 +1019,8 @@ class TicTacToeGame {
     this.resetRound();
   }
 
-  showModal({ emoji, title, subtitle }) {
-    this.modalEmoji.textContent = emoji;
-    this.modalTitle.textContent = title;
-    this.modalSubtitle.textContent = subtitle;
-    this.modal.classList.remove('hidden');
-  }
-
-  closeModal() {
-    this.modal.classList.add('hidden');
+  closeResultModal() {
+    this.resultModal.classList.add('hidden');
   }
 }
 

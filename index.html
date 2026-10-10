@@ -1,9 +1,17 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>🌟 Super Fun Tic-Tac-Toe! 🎮</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>🌟 益智三子棋儿童平板乐园 🎮 | Super Tic-Tac-Toe</title>
+  
+  <!-- Tablet & PWA Web App Meta Tags -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="儿童三子棋">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="theme-color" content="#fed6e3">
+
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&display=swap" rel="stylesheet">
@@ -13,158 +21,247 @@
   <!-- Fullscreen Confetti Canvas -->
   <canvas id="confettiCanvas"></canvas>
 
-  <div class="app-container">
-    <!-- Top Header -->
+  <div class="tablet-layout-container">
+    <!-- Top Header & Reward Bar -->
     <header class="app-header">
-      <div class="header-title">
-        <span class="star-icon">✨</span>
-        <h1>Tic-Tac-Toe!</h1>
-        <span class="star-icon">🎈</span>
+      <div class="header-left">
+        <span class="logo-emoji">🎈</span>
+        <div class="logo-text">
+          <h1>儿童三子棋</h1>
+          <span class="sub-badge">平板乐园版</span>
+        </div>
       </div>
-      <div class="header-controls">
-        <button id="soundToggleBtn" class="pill-btn sound-btn" title="Toggle Sound" aria-label="Toggle Sound">
+
+      <!-- Star Jar / Reward Status in Header -->
+      <div class="header-right">
+        <button id="openRewardBtn" class="reward-pill-btn" aria-label="打开奖励宝箱" title="点击查看你的星星和徽章成就">
+          <span class="star-icon-bounce">⭐</span>
+          <span class="star-count-badge" id="headerStarCount">0</span>
+          <span class="reward-btn-label">奖励馆 🎁</span>
+        </button>
+
+        <button id="soundToggleBtn" class="pill-btn sound-btn" title="开关音效" aria-label="开关音效">
           <span id="soundIcon">🔊</span>
-          <span id="soundText" class="btn-text">Sound ON</span>
+          <span id="soundText" class="btn-text">声音 开</span>
         </button>
       </div>
     </header>
 
-    <!-- Theme Picker Bar -->
-    <section class="theme-bar" aria-label="Character Theme Selection">
-      <span class="theme-label">Pick Your Characters:</span>
-      <div class="theme-chips" id="themeChips">
-        <button class="theme-chip active" data-theme="pets">
-          <span class="chip-emoji">🐶 vs 🐱</span>
-          <span class="chip-name">Pets</span>
-        </button>
-        <button class="theme-chip" data-theme="space">
-          <span class="chip-emoji">🚀 vs 👽</span>
-          <span class="chip-name">Space</span>
-        </button>
-        <button class="theme-chip" data-theme="dino">
-          <span class="chip-emoji">🦖 vs 🌋</span>
-          <span class="chip-name">Dinos</span>
-        </button>
-        <button class="theme-chip" data-theme="magic">
-          <span class="chip-emoji">🦄 vs 🌈</span>
-          <span class="chip-name">Magic</span>
-        </button>
-        <button class="theme-chip" data-theme="sweet">
-          <span class="chip-emoji">🍦 vs 🍩</span>
-          <span class="chip-name">Treats</span>
-        </button>
-        <button class="theme-chip" data-theme="classic">
-          <span class="chip-emoji">❌ vs ⭕</span>
-          <span class="chip-name">Classic</span>
-        </button>
-      </div>
-    </section>
+    <!-- Main Tablet Dual Column Wrapper -->
+    <div class="tablet-grid-layout">
+      <!-- LEFT / SIDEBAR: Player Status, Rewards & Settings -->
+      <aside class="tablet-sidebar">
+        <!-- Level & Star Progress Card -->
+        <section class="reward-summary-card">
+          <div class="reward-card-top">
+            <div class="rank-avatar" id="playerRankAvatar">🌱</div>
+            <div class="rank-details">
+              <div class="rank-title" id="playerRankTitle">棋艺小萌芽</div>
+              <div class="rank-sub" id="streakText">当前连胜: 0 连胜 🔥</div>
+            </div>
+          </div>
+          <div class="progress-bar-container" title="集齐星星升级称号！">
+            <div class="progress-bar-fill" id="rankProgressBar" style="width: 0%;"></div>
+          </div>
+          <div class="progress-label" id="rankProgressLabel">0 / 10 颗星星升级下一级</div>
+        </section>
 
-    <!-- Mode Selector & Difficulty -->
-    <section class="mode-bar">
-      <div class="mode-toggles">
-        <button id="modePvPBtn" class="mode-btn active" data-mode="pvp">
-          👥 2 Players (Pass & Play)
-        </button>
-        <button id="modeAiBtn" class="mode-btn" data-mode="ai">
-          🤖 vs Friendly Bot
-        </button>
-      </div>
+        <!-- Scoreboard -->
+        <section class="scoreboard">
+          <!-- Player 1 Card -->
+          <div class="score-card player-x active" id="cardPlayerX">
+            <div class="avatar-badge" id="avatarX">🐶</div>
+            <div class="score-info">
+              <div class="player-name" id="namePlayerX">小狗</div>
+              <div class="score-number" id="scoreX">0</div>
+            </div>
+            <div class="turn-indicator-dot"></div>
+          </div>
 
-      <!-- Bot Difficulty Selector (visible only when AI mode is active) -->
-      <div id="aiDifficultyRow" class="difficulty-row hidden">
-        <span class="diff-label">Bot Buddy:</span>
-        <div class="diff-buttons">
-          <button class="diff-btn active" data-diff="easy" title="Makes silly moves so you can win easily!">
-            🐒 Silly Monkey <span>(Easy)</span>
+          <!-- Ties Card -->
+          <div class="score-card score-ties">
+            <div class="avatar-badge">🤝</div>
+            <div class="score-info">
+              <div class="player-name">平局</div>
+              <div class="score-number" id="scoreTies">0</div>
+            </div>
+          </div>
+
+          <!-- Player 2 / Bot Card -->
+          <div class="score-card player-o" id="cardPlayerO">
+            <div class="avatar-badge" id="avatarO">🐱</div>
+            <div class="score-info">
+              <div class="player-name" id="namePlayerO">小猫</div>
+              <div class="score-number" id="scoreO">0</div>
+            </div>
+            <div class="turn-indicator-dot"></div>
+          </div>
+        </section>
+
+        <!-- Mode Selector & Difficulty -->
+        <section class="mode-bar">
+          <div class="mode-toggles">
+            <button id="modePvPBtn" class="mode-btn active" data-mode="pvp">
+              👥 双人对战 (与爸爸妈妈/朋友)
+            </button>
+            <button id="modeAiBtn" class="mode-btn" data-mode="ai">
+              🤖 单人挑战智能小伙伴
+            </button>
+          </div>
+
+          <!-- Bot Difficulty Selector -->
+          <div id="aiDifficultyRow" class="difficulty-row hidden">
+            <span class="diff-label">小伙伴水平:</span>
+            <div class="diff-buttons">
+              <button class="diff-btn active" data-diff="easy" title="容易赢，自信满满！">
+                🐒 贪玩小猴 <span>(简单)</span>
+              </button>
+              <button class="diff-btn" data-diff="medium" title="会防守，势均力敌！">
+                🦊 机灵小狐 <span>(中等)</span>
+              </button>
+              <button class="diff-btn" data-diff="hard" title="动脑筋的智慧大师！">
+                🦉 智慧猫头鹰 <span>(大师)</span>
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <!-- Controls: New Round & Reset -->
+        <div class="sidebar-actions">
+          <button id="resetRoundBtn" class="pill-btn primary-action-btn">
+            🔄 开始新一轮
           </button>
-          <button class="diff-btn" data-diff="medium" title="Smart and playful challenge">
-            🦊 Clever Fox <span>(Medium)</span>
-          </button>
-          <button class="diff-btn" data-diff="hard" title="Super brainy puzzle master">
-            🦉 Wise Owl <span>(Master)</span>
+          <button id="resetScoresBtn" class="pill-btn secondary-action-btn" title="清空本轮比分">
+            🏆 清零比分
           </button>
         </div>
-      </div>
-    </section>
+      </aside>
 
-    <!-- Scoreboard -->
-    <section class="scoreboard">
-      <!-- Player 1 Card -->
-      <div class="score-card player-x active" id="cardPlayerX">
-        <div class="avatar-badge" id="avatarX">🐶</div>
-        <div class="score-info">
-          <div class="player-name" id="namePlayerX">Player 1</div>
-          <div class="score-number" id="scoreX">0</div>
+      <!-- RIGHT / MAIN: Themes, Status & Big Touch Board -->
+      <main class="tablet-main-arena">
+        <!-- Theme Picker Bar -->
+        <section class="theme-bar" aria-label="主题角色选择">
+          <span class="theme-label">选择喜欢的萌萌角色：</span>
+          <div class="theme-chips" id="themeChips">
+            <button class="theme-chip active" data-theme="pets">
+              <span class="chip-emoji">🐶 vs 🐱</span>
+              <span class="chip-name">萌宠王国</span>
+            </button>
+            <button class="theme-chip" data-theme="space">
+              <span class="chip-emoji">🚀 vs 👽</span>
+              <span class="chip-name">星际太空</span>
+            </button>
+            <button class="theme-chip" data-theme="dino">
+              <span class="chip-emoji">🦖 vs 🌋</span>
+              <span class="chip-name">恐龙探险</span>
+            </button>
+            <button class="theme-chip" data-theme="magic">
+              <span class="chip-emoji">🦄 vs 🌈</span>
+              <span class="chip-name">魔法独角兽</span>
+            </button>
+            <button class="theme-chip" data-theme="sweet">
+              <span class="chip-emoji">🍦 vs 🍩</span>
+              <span class="chip-name">甜蜜甜点</span>
+            </button>
+            <button class="theme-chip" data-theme="sea">
+              <span class="chip-emoji">🐳 vs 🦀</span>
+              <span class="chip-name">深海萌友</span>
+            </button>
+            <button class="theme-chip" data-theme="classic">
+              <span class="chip-emoji">❌ vs ⭕</span>
+              <span class="chip-name">经典符号</span>
+            </button>
+          </div>
+        </section>
+
+        <!-- Turn Status Banner -->
+        <section class="status-banner" id="statusBanner">
+          <span class="status-icon" id="statusEmoji">🐶</span>
+          <span class="status-text" id="statusText">小狗的回合！点击任意格子下棋吧！</span>
+        </section>
+
+        <!-- Large Tablet Game Board -->
+        <div class="board-wrapper">
+          <div class="board" id="board" role="grid" aria-label="Tic Tac Toe Board">
+            <button class="cell" data-index="0" role="gridcell" aria-label="左上格"></button>
+            <button class="cell" data-index="1" role="gridcell" aria-label="中上格"></button>
+            <button class="cell" data-index="2" role="gridcell" aria-label="右上格"></button>
+            <button class="cell" data-index="3" role="gridcell" aria-label="中左格"></button>
+            <button class="cell" data-index="4" role="gridcell" aria-label="中心格"></button>
+            <button class="cell" data-index="5" role="gridcell" aria-label="中右格"></button>
+            <button class="cell" data-index="6" role="gridcell" aria-label="左下格"></button>
+            <button class="cell" data-index="7" role="gridcell" aria-label="中下格"></button>
+            <button class="cell" data-index="8" role="gridcell" aria-label="右下格"></button>
+          </div>
         </div>
-        <div class="turn-indicator-dot"></div>
-      </div>
-
-      <!-- Ties Card -->
-      <div class="score-card score-ties">
-        <div class="avatar-badge">🤝</div>
-        <div class="score-info">
-          <div class="player-name">Ties</div>
-          <div class="score-number" id="scoreTies">0</div>
-        </div>
-      </div>
-
-      <!-- Player 2 / Bot Card -->
-      <div class="score-card player-o" id="cardPlayerO">
-        <div class="avatar-badge" id="avatarO">🐱</div>
-        <div class="score-info">
-          <div class="player-name" id="namePlayerO">Player 2</div>
-          <div class="score-number" id="scoreO">0</div>
-        </div>
-        <div class="turn-indicator-dot"></div>
-      </div>
-    </section>
-
-    <!-- Turn Status Banner -->
-    <section class="status-banner" id="statusBanner">
-      <span class="status-icon" id="statusEmoji">🐶</span>
-      <span class="status-text" id="statusText">Puppy's turn! Tap any box!</span>
-    </section>
-
-    <!-- Game Board -->
-    <main class="board-wrapper">
-      <div class="board" id="board" role="grid" aria-label="Tic Tac Toe Board">
-        <button class="cell" data-index="0" role="gridcell" aria-label="Top Left"></button>
-        <button class="cell" data-index="1" role="gridcell" aria-label="Top Middle"></button>
-        <button class="cell" data-index="2" role="gridcell" aria-label="Top Right"></button>
-        <button class="cell" data-index="3" role="gridcell" aria-label="Middle Left"></button>
-        <button class="cell" data-index="4" role="gridcell" aria-label="Center"></button>
-        <button class="cell" data-index="5" role="gridcell" aria-label="Middle Right"></button>
-        <button class="cell" data-index="6" role="gridcell" aria-label="Bottom Left"></button>
-        <button class="cell" data-index="7" role="gridcell" aria-label="Bottom Middle"></button>
-        <button class="cell" data-index="8" role="gridcell" aria-label="Bottom Right"></button>
-      </div>
-    </main>
-
-    <!-- Action Buttons -->
-    <footer class="action-footer">
-      <button id="resetRoundBtn" class="pill-btn primary-action-btn">
-        🔄 New Round
-      </button>
-      <button id="resetScoresBtn" class="pill-btn secondary-action-btn">
-        🏆 Reset Scores
-      </button>
-    </footer>
+      </main>
+    </div>
   </div>
 
-  <!-- Win / Tie Modal Dialog -->
+  <!-- Win / Tie Round Modal -->
   <div class="modal-backdrop hidden" id="resultModal">
     <div class="modal-card">
       <div class="modal-decoration" id="modalEmoji">🎉</div>
-      <h2 class="modal-title" id="modalTitle">Awesome Job!</h2>
-      <p class="modal-subtitle" id="modalSubtitle">Puppy wins this round!</p>
+      <h2 class="modal-title" id="modalTitle">太棒啦！</h2>
+      <p class="modal-subtitle" id="modalSubtitle">小狗获得了本轮胜利！</p>
+      
+      <!-- Reward Earned Banner -->
+      <div class="reward-gain-banner" id="rewardGainBanner">
+        <span class="gain-stars">⭐ +3 颗星星</span>
+        <span class="gain-sub" id="rewardGainSub">获胜奖励！</span>
+      </div>
+
       <div class="modal-buttons">
         <button id="modalPlayAgainBtn" class="modal-btn main-btn">
-          🚀 Play Next Round!
+          🚀 再来一局！
         </button>
       </div>
     </div>
   </div>
+
+  <!-- Reward & Sticker Book Modal (奖励与勋章馆) -->
+  <div class="modal-backdrop hidden" id="rewardModal">
+    <div class="modal-card reward-modal-card">
+      <div class="reward-modal-header">
+        <div class="header-title-box">
+          <span class="trophy-big">🏆</span>
+          <h2>我的奖励勋章馆</h2>
+        </div>
+        <button id="closeRewardModalBtn" class="close-icon-btn" aria-label="关闭">✖</button>
+      </div>
+
+      <div class="reward-stats-banner">
+        <div class="stat-item">
+          <div class="stat-val" id="rewardModalStars">0</div>
+          <div class="stat-name">⭐ 累计星星</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-val" id="rewardModalWins">0</div>
+          <div class="stat-name">🏅 获胜场次</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-val" id="rewardModalBadgesCount">0 / 8</div>
+          <div class="stat-name">🎖️ 已解锁勋章</div>
+        </div>
+      </div>
+
+      <div class="badges-scroll-area">
+        <h3 class="badges-section-title">🌟 荣誉勋章陈列架</h3>
+        <div class="badges-grid" id="badgesGrid">
+          <!-- Dynamically populated badges -->
+        </div>
+      </div>
+
+      <div class="modal-buttons" style="margin-top: 14px;">
+        <button id="rewardCloseActionBtn" class="modal-btn main-btn">
+          ✨ 继续挑战收集更多星星！
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Floating Star Flying Animation Container -->
+  <div id="starFlyContainer" class="star-fly-container"></div>
 
   <script src="script.js"></script>
 </body>

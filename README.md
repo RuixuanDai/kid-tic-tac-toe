@@ -1,35 +1,43 @@
-# 🌟 Super Fun Tic-Tac-Toe for Kids! 🎮
+# 🌟 儿童益智三子棋（平板乐园版）🎮
 
-A colorful, cheerful, and interactive Tic-Tac-Toe web game created especially for kids!
+专为儿童在平板（iPad / Android 平板）及电脑上打造的益智三子棋游戏，拥有可爱的角色主题、触摸大按键、生动的音效动画，以及专为小朋友设计的**星星奖励与成就勋章系统**！
 
-## ✨ Features
+## ✨ 平板专属特色功能
 
-- 🎨 **6 Fun Themes & Characters**:
-  - 🐶 Puppies vs 🐱 Kittens
-  - 🚀 Rockets vs 👽 Aliens
-  - 🦖 Dinosaurs vs 🌋 Volcanoes
-  - 🦄 Unicorns vs 🌈 Rainbows
-  - 🍦 Ice Cream vs 🍩 Donuts
-  - ❌ vs ⭕ Classic
-- 🤖 **2 Game Modes**:
-  - **Pass & Play (2 Players)**: Play together on the same screen (computer, iPad, tablet, or phone).
-  - **Play vs Friendly Bot (1 Player)** with 3 fun difficulty levels:
-    - 🐒 **Silly Monkey (Easy)**: Makes goofy mistakes so little kids can win easily!
-    - 🦊 **Clever Fox (Medium)**: Playful challenge that blocks obvious wins.
-    - 🦉 **Wise Owl (Master)**: Smart brainy puzzle master.
-- 🎵 **Kid-Friendly Sound Effects**:
-  - Pop sounds when placing pieces.
-  - Cheerful victory fanfare on win.
-  - Funny wobble whistle on tie.
-  - Sound Mute/Unmute button.
-  - *Uses built-in Web Audio API (no external audio files required!)*
-- 🎊 **Celebration Confetti**:
-  - Colorful confetti particle explosion across the screen when a player wins!
-- 🏆 **Scoreboard**:
-  - Tracks player wins and ties with reset options.
+- 📱 **专为平板打造的双栏/大触控布局**：
+  - 适配横屏与竖屏平板尺寸，超大防误触圆角棋格，触控反应零延迟（`touch-action: manipulation`）。
+  - 支持 iPad Safari / Android Chrome **“添加到主屏幕” (Add to Home Screen)** 获得像原生 App 一样的全屏体验。
+- ⭐ **星星奖励罐与进阶称号**：
+  - **赢棋奖励**：赢得比赛可获得 **+3 颗星星**，连胜还能获得额外 **+2 颗星星**！
+  - **平局鼓励**：平局可获得 **+1 颗星星** 鼓励奖。
+  - **五大棋艺称号**：从 🌱 棋艺小萌芽 到 👑 终极棋圣，集齐星星自动升级！
+  - **飞星动画**：胜利时星星欢快飞入顶部的星星宝箱，配有清脆的风铃音效。
+- 🎖️ **8 块专属儿童荣誉勋章**：
+  - 🎈 **初出茅庐**：赢得第 1 场棋局胜利
+  - 🔥 **连胜小霸王**：达成 3 连胜
+  - ⚡ **无敌连胜王**：达成 5 连胜
+  - 🤖 **智斗小机灵**：单人模式战胜机器人
+  - 🦉 **智慧小军师**：击败大师级猫头鹰
+  - 🎨 **百变换装达人**：体验 3 种不同角色主题
+  - ⭐ **闪耀收藏家**：累计获得 20 颗星星
+  - 👑 **棋盘大统领**：累计赢得 10 局胜利
+- 🎨 **7 种萌萌主题**：
+  - 🐶 萌宠王国 (小狗 vs 小猫)
+  - 🚀 星际太空 (火箭 vs 外星人)
+  - 🦖 恐龙探险 (暴龙 vs 火山)
+  - 🦄 魔法独角兽 (独角兽 vs 彩虹)
+  - 🍦 甜蜜甜点 (冰淇淋 vs 甜甜圈)
+  - 🐳 深海萌友 (小蓝鲸 vs 小红蟹)
+  - ❌ 经典符号 (红叉 vs 蓝圈)
+- 🤖 **单人挑战智能小伙伴**：
+  - 🐒 **贪玩小猴（简单）**：让小朋友轻松获胜，建立自信心！
+  - 🦊 **机灵小狐（中等）**：会合理防守，势均力敌。
+  - 🦉 **智慧猫头鹰（大师）**：启发小朋友思考策略。
+- 🎊 **胜利全屏彩带雨**：
+  - 真实物理模拟的多彩纸屑与金光闪烁！
 
-## 🚀 How to Play
+---
 
-1. Simply double-click **`index.html`** to open it in any web browser (Chrome, Edge, Safari, Firefox).
-2. Choose your favorite characters from the top bar!
-3. Pick **2 Players** or **vs Friendly Bot** and start tapping squares!
+## 🌐 在线试玩地址
+
+👉 **[https://ruixuandai.github.io/kid-tic-tac-toe/](https://ruixuandai.github.io/kid-tic-tac-toe/)**
