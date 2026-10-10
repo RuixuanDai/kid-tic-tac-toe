@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>🌟 Super Fun Tic-Tac-Toe! 🎮</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- Fullscreen Confetti Canvas -->
+  <canvas id="confettiCanvas"></canvas>
+
+  <div class="app-container">
+    <!-- Top Header -->
+    <header class="app-header">
+      <div class="header-title">
+        <span class="star-icon">✨</span>
+        <h1>Tic-Tac-Toe!</h1>
+        <span class="star-icon">🎈</span>
+      </div>
+      <div class="header-controls">
+        <button id="soundToggleBtn" class="pill-btn sound-btn" title="Toggle Sound" aria-label="Toggle Sound">
+          <span id="soundIcon">🔊</span>
+          <span id="soundText" class="btn-text">Sound ON</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Theme Picker Bar -->
+    <section class="theme-bar" aria-label="Character Theme Selection">
+      <span class="theme-label">Pick Your Characters:</span>
+      <div class="theme-chips" id="themeChips">
+        <button class="theme-chip active" data-theme="pets">
+          <span class="chip-emoji">🐶 vs 🐱</span>
+          <span class="chip-name">Pets</span>
+        </button>
+        <button class="theme-chip" data-theme="space">
+          <span class="chip-emoji">🚀 vs 👽</span>
+          <span class="chip-name">Space</span>
+        </button>
+        <button class="theme-chip" data-theme="dino">
+          <span class="chip-emoji">🦖 vs 🌋</span>
+          <span class="chip-name">Dinos</span>
+        </button>
+        <button class="theme-chip" data-theme="magic">
+          <span class="chip-emoji">🦄 vs 🌈</span>
+          <span class="chip-name">Magic</span>
+        </button>
+        <button class="theme-chip" data-theme="sweet">
+          <span class="chip-emoji">🍦 vs 🍩</span>
+          <span class="chip-name">Treats</span>
+        </button>
+        <button class="theme-chip" data-theme="classic">
+          <span class="chip-emoji">❌ vs ⭕</span>
+          <span class="chip-name">Classic</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- Mode Selector & Difficulty -->
+    <section class="mode-bar">
+      <div class="mode-toggles">
+        <button id="modePvPBtn" class="mode-btn active" data-mode="pvp">
+          👥 2 Players (Pass & Play)
+        </button>
+        <button id="modeAiBtn" class="mode-btn" data-mode="ai">
+          🤖 vs Friendly Bot
+        </button>
+      </div>
+
+      <!-- Bot Difficulty Selector (visible only when AI mode is active) -->
+      <div id="aiDifficultyRow" class="difficulty-row hidden">
+        <span class="diff-label">Bot Buddy:</span>
+        <div class="diff-buttons">
+          <button class="diff-btn active" data-diff="easy" title="Makes silly moves so you can win easily!">
+            🐒 Silly Monkey <span>(Easy)</span>
+          </button>
+          <button class="diff-btn" data-diff="medium" title="Smart and playful challenge">
+            🦊 Clever Fox <span>(Medium)</span>
+          </button>
+          <button class="diff-btn" data-diff="hard" title="Super brainy puzzle master">
+            🦉 Wise Owl <span>(Master)</span>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Scoreboard -->
+    <section class="scoreboard">
+      <!-- Player 1 Card -->
+      <div class="score-card player-x active" id="cardPlayerX">
+        <div class="avatar-badge" id="avatarX">🐶</div>
+        <div class="score-info">
+          <div class="player-name" id="namePlayerX">Player 1</div>
+          <div class="score-number" id="scoreX">0</div>
+        </div>
+        <div class="turn-indicator-dot"></div>
+      </div>
+
+      <!-- Ties Card -->
+      <div class="score-card score-ties">
+        <div class="avatar-badge">🤝</div>
+        <div class="score-info">
+          <div class="player-name">Ties</div>
+          <div class="score-number" id="scoreTies">0</div>
+        </div>
+      </div>
+
+      <!-- Player 2 / Bot Card -->
+      <div class="score-card player-o" id="cardPlayerO">
+        <div class="avatar-badge" id="avatarO">🐱</div>
+        <div class="score-info">
+          <div class="player-name" id="namePlayerO">Player 2</div>
+          <div class="score-number" id="scoreO">0</div>
+        </div>
+        <div class="turn-indicator-dot"></div>
+      </div>
+    </section>
+
+    <!-- Turn Status Banner -->
+    <section class="status-banner" id="statusBanner">
+      <span class="status-icon" id="statusEmoji">🐶</span>
+      <span class="status-text" id="statusText">Puppy's turn! Tap any box!</span>
+    </section>
+
+    <!-- Game Board -->
+    <main class="board-wrapper">
+      <div class="board" id="board" role="grid" aria-label="Tic Tac Toe Board">
+        <button class="cell" data-index="0" role="gridcell" aria-label="Top Left"></button>
+        <button class="cell" data-index="1" role="gridcell" aria-label="Top Middle"></button>
+        <button class="cell" data-index="2" role="gridcell" aria-label="Top Right"></button>
+        <button class="cell" data-index="3" role="gridcell" aria-label="Middle Left"></button>
+        <button class="cell" data-index="4" role="gridcell" aria-label="Center"></button>
+        <button class="cell" data-index="5" role="gridcell" aria-label="Middle Right"></button>
+        <button class="cell" data-index="6" role="gridcell" aria-label="Bottom Left"></button>
+        <button class="cell" data-index="7" role="gridcell" aria-label="Bottom Middle"></button>
+        <button class="cell" data-index="8" role="gridcell" aria-label="Bottom Right"></button>
+      </div>
+    </main>
+
+    <!-- Action Buttons -->
+    <footer class="action-footer">
+      <button id="resetRoundBtn" class="pill-btn primary-action-btn">
+        🔄 New Round
+      </button>
+      <button id="resetScoresBtn" class="pill-btn secondary-action-btn">
+        🏆 Reset Scores
+      </button>
+    </footer>
+  </div>
+
+  <!-- Win / Tie Modal Dialog -->
+  <div class="modal-backdrop hidden" id="resultModal">
+    <div class="modal-card">
+      <div class="modal-decoration" id="modalEmoji">🎉</div>
+      <h2 class="modal-title" id="modalTitle">Awesome Job!</h2>
+      <p class="modal-subtitle" id="modalSubtitle">Puppy wins this round!</p>
+      <div class="modal-buttons">
+        <button id="modalPlayAgainBtn" class="modal-btn main-btn">
+          🚀 Play Next Round!
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
