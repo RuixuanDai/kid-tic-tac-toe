@@ -1140,6 +1140,15 @@ class TicTacToeGame {
         <div class="badge-desc">${isUnlocked ? badge.desc : '未解锁：' + badge.desc}</div>
       `;
 
+      card.addEventListener('click', () => {
+        this.sound.playClick();
+        if (isUnlocked) {
+          this.voice.speak(`这是【${badge.title}】勋章！${badge.desc}！`, true);
+        } else {
+          this.voice.speak(`这个勋章还未解锁，解锁条件：${badge.desc}，继续加油哦！`, true);
+        }
+      });
+
       this.badgesGrid.appendChild(card);
     });
 
