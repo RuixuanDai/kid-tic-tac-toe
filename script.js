@@ -505,6 +505,7 @@ class TicTacToeGame {
     this.modePvPBtn = document.getElementById('modePvPBtn');
     this.modeAiBtn = document.getElementById('modeAiBtn');
     this.aiDifficultyRow = document.getElementById('aiDifficultyRow');
+    this.pvpTipRow = document.getElementById('pvpTipRow');
     this.diffButtons = document.querySelectorAll('.diff-btn');
     this.soundToggleBtn = document.getElementById('soundToggleBtn');
     this.soundIcon = document.getElementById('soundIcon');
@@ -664,9 +665,11 @@ class TicTacToeGame {
 
     if (mode === 'ai') {
       this.aiDifficultyRow.classList.remove('hidden');
+      if (this.pvpTipRow) this.pvpTipRow.classList.add('hidden');
       this.voice.speak('开启单人挑战，和电脑小伙伴下棋！', true);
     } else {
       this.aiDifficultyRow.classList.add('hidden');
+      if (this.pvpTipRow) this.pvpTipRow.classList.remove('hidden');
       this.voice.speak('开启双人对战，和小伙伴一起下棋！', true);
     }
 
@@ -758,6 +761,8 @@ class TicTacToeGame {
   triggerBotMove() {
     this.isBotThinking = true;
     const botName = this.theme.p2.name;
+    this.statusBanner.classList.remove('turn-p1', 'turn-p2');
+    this.statusBanner.classList.add('bot-thinking');
     this.statusEmoji.textContent = '🤔';
     this.statusText.textContent = `${botName} 正在动脑筋思考中...`;
 
@@ -1166,15 +1171,24 @@ class TicTacToeGame {
     this.cardPlayerX.classList.toggle('active', isP1);
     this.cardPlayerO.classList.toggle('active', !isP1);
 
+    this.statusBanner.classList.remove('turn-p1', 'turn-p2', 'bot-thinking');
+
     if (this.gameMode === 'ai') {
       if (isP1) {
+        this.statusBanner.classList.add('turn-p1');
         this.statusText.textContent = `轮到 你（${char.name}）下棋啦！请点击格子！`;
         this.statusEmoji.textContent = char.symbol;
       } else {
+        this.statusBanner.classList.add('bot-thinking');
         this.statusText.textContent = `电脑（${char.name}）正在动脑筋思考中...`;
         this.statusEmoji.textContent = '🤖';
       }
     } else {
+      if (isP1) {
+        this.statusBanner.classList.add('turn-p1');
+      } else {
+        this.statusBanner.classList.add('turn-p2');
+      }
       const pLabel = isP1 ? '玩家 1' : '玩家 2';
       this.statusText.textContent = `轮到 ${pLabel}（${char.name}）啦！请选格子！`;
       this.statusEmoji.textContent = char.symbol;

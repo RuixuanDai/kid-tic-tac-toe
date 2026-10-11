@@ -20,7 +20,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=20261010-v6">
+  <link rel="stylesheet" href="style.css?v=20261010-v7">
 </head>
 <body>
   <!-- Floating Cheerful Background Elements -->
@@ -62,6 +62,43 @@
         </button>
       </div>
     </header>
+
+    <!-- Theme Selector Tray (Full Width Top Bar) -->
+    <section class="theme-bar" aria-label="主题萌宠选择">
+      <div class="theme-bar-header">
+        <span class="theme-label">🎨 换一套喜欢的萌宠搭档：</span>
+      </div>
+      <div class="theme-chips" id="themeChips">
+        <button class="theme-chip active" data-theme="pets">
+          <span class="chip-emoji">🐶 vs 🐱</span>
+          <span class="chip-name">萌宠王国</span>
+        </button>
+        <button class="theme-chip" data-theme="space">
+          <span class="chip-emoji">🚀 vs 👽</span>
+          <span class="chip-name">星际太空</span>
+        </button>
+        <button class="theme-chip" data-theme="dino">
+          <span class="chip-emoji">🦖 vs 🌋</span>
+          <span class="chip-name">恐龙探险</span>
+        </button>
+        <button class="theme-chip" data-theme="magic">
+          <span class="chip-emoji">🦄 vs 🌈</span>
+          <span class="chip-name">魔法独角兽</span>
+        </button>
+        <button class="theme-chip" data-theme="sweet">
+          <span class="chip-emoji">🍦 vs 🍩</span>
+          <span class="chip-name">甜蜜甜点</span>
+        </button>
+        <button class="theme-chip" data-theme="sea">
+          <span class="chip-emoji">🐳 vs 🦀</span>
+          <span class="chip-name">深海萌友</span>
+        </button>
+        <button class="theme-chip" data-theme="classic">
+          <span class="chip-emoji"><b class="c-x">X</b> vs <b class="c-o">O</b></span>
+          <span class="chip-name">经典 X vs O</span>
+        </button>
+      </div>
+    </section>
 
     <!-- Main Tablet Grid: Left Sidebar + Right Arena -->
     <div class="tablet-grid-layout">
@@ -140,6 +177,12 @@
               </button>
             </div>
           </div>
+
+          <!-- PvP Friendly Tips Row -->
+          <div id="pvpTipRow" class="pvp-tip-row hidden">
+            <div class="pvp-tip-badge">👨‍👩‍👧 亲子欢乐对弈</div>
+            <div class="pvp-tip-text">两人轮流点格子下棋，先连成三颗萌宠的小朋友获胜并获得星星哦！✨</div>
+          </div>
         </section>
 
         <!-- Sidebar Actions -->
@@ -153,43 +196,8 @@
         </div>
       </aside>
 
-      <!-- RIGHT ARENA: Themes, Turn Banner, 3x3 Board -->
+      <!-- RIGHT ARENA: Turn Banner, 3x3 Board -->
       <main class="tablet-main-arena">
-        <!-- Theme Selector Tray -->
-        <section class="theme-bar" aria-label="主题萌宠选择">
-          <span class="theme-label">选择喜欢的萌萌角色：</span>
-          <div class="theme-chips" id="themeChips">
-            <button class="theme-chip active" data-theme="pets">
-              <span class="chip-emoji">🐶 vs 🐱</span>
-              <span class="chip-name">萌宠王国</span>
-            </button>
-            <button class="theme-chip" data-theme="space">
-              <span class="chip-emoji">🚀 vs 👽</span>
-              <span class="chip-name">星际太空</span>
-            </button>
-            <button class="theme-chip" data-theme="dino">
-              <span class="chip-emoji">🦖 vs 🌋</span>
-              <span class="chip-name">恐龙探险</span>
-            </button>
-            <button class="theme-chip" data-theme="magic">
-              <span class="chip-emoji">🦄 vs 🌈</span>
-              <span class="chip-name">魔法独角兽</span>
-            </button>
-            <button class="theme-chip" data-theme="sweet">
-              <span class="chip-emoji">🍦 vs 🍩</span>
-              <span class="chip-name">甜蜜甜点</span>
-            </button>
-            <button class="theme-chip" data-theme="sea">
-              <span class="chip-emoji">🐳 vs 🦀</span>
-              <span class="chip-name">深海萌友</span>
-            </button>
-            <button class="theme-chip" data-theme="classic">
-              <span class="chip-emoji"><b class="c-x">X</b> vs <b class="c-o">O</b></span>
-              <span class="chip-name">经典 X vs O</span>
-            </button>
-          </div>
-        </section>
-
         <!-- Turn Status Banner -->
         <section class="status-banner" id="statusBanner">
           <span class="status-icon" id="statusEmoji">🐶</span>
@@ -281,6 +289,6 @@
   <!-- Flying Star Animation Container -->
   <div id="starFlyContainer" class="star-fly-container"></div>
 
-  <script src="script.js?v=20261010-v6"></script>
+  <script src="script.js?v=20261010-v7"></script>
 </body>
 </html>
