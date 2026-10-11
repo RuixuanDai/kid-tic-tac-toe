@@ -20,7 +20,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=20261010-v9">
+  <link rel="stylesheet" href="style.css?v=20261011-v10">
 </head>
 <body>
   <!-- Floating Cheerful Background Elements -->
@@ -43,66 +43,31 @@
       <div class="header-left">
         <span class="logo-emoji">🎈</span>
         <div class="logo-text">
-          <h1>儿童三子棋</h1>
-          <span class="sub-badge">平板乐园版 🎮</span>
+          <h1>儿童三子棋 <span class="sub-badge">平板乐园版 🎮</span></h1>
         </div>
       </div>
 
-      <!-- Header Controls: Reward Jar & Voice Sound Toggle -->
+      <!-- Header Controls: Reward Jar, Sound Toggle, Settings Modal Trigger -->
       <div class="header-right">
         <button id="openRewardBtn" class="reward-pill-btn" aria-label="打开奖励宝箱" title="点击查看你的星星和成就勋章">
           <span class="star-icon-bounce">⭐</span>
           <span class="star-count-badge" id="headerStarCount">0</span>
-          <span class="reward-btn-label">奖励馆 🎁</span>
+          <span class="reward-btn-label" id="rewardBtnLabel">去赢星星！🎁</span>
         </button>
 
-        <button id="soundToggleBtn" class="pill-btn sound-btn" title="开关语音与音效" aria-label="开关语音与音效">
+        <button id="soundToggleBtn" class="pill-btn sound-icon-btn" title="开关语音与音效" aria-label="开关语音与音效">
           <span id="soundIcon">🔊</span>
-          <span id="soundText" class="btn-text">语音 开</span>
+        </button>
+
+        <button id="openSettingsBtn" class="pill-btn settings-header-btn" title="游戏设置（换角色/模式/难度）" aria-label="打开设置">
+          <span>⚙️ 设置</span>
         </button>
       </div>
     </header>
 
-    <!-- Theme Selector Tray (Full Width Top Bar) -->
-    <section class="theme-bar" aria-label="主题萌宠选择">
-      <div class="theme-bar-header">
-        <span class="theme-label">🎨 换一套喜欢的萌宠搭档：</span>
-      </div>
-      <div class="theme-chips" id="themeChips">
-        <button class="theme-chip active" data-theme="pets">
-          <span class="chip-emoji">🐶 vs 🐱</span>
-          <span class="chip-name">萌宠王国</span>
-        </button>
-        <button class="theme-chip" data-theme="space">
-          <span class="chip-emoji">🚀 vs 👽</span>
-          <span class="chip-name">星际太空</span>
-        </button>
-        <button class="theme-chip" data-theme="dino">
-          <span class="chip-emoji">🦖 vs 🌋</span>
-          <span class="chip-name">恐龙探险</span>
-        </button>
-        <button class="theme-chip" data-theme="magic">
-          <span class="chip-emoji">🦄 vs 🌈</span>
-          <span class="chip-name">魔法独角兽</span>
-        </button>
-        <button class="theme-chip" data-theme="sweet">
-          <span class="chip-emoji">🍦 vs 🍩</span>
-          <span class="chip-name">甜蜜甜点</span>
-        </button>
-        <button class="theme-chip" data-theme="sea">
-          <span class="chip-emoji">🐳 vs 🦀</span>
-          <span class="chip-name">深海萌友</span>
-        </button>
-        <button class="theme-chip" data-theme="classic">
-          <span class="chip-emoji"><b class="c-x">X</b> vs <b class="c-o">O</b></span>
-          <span class="chip-name">经典 X vs O</span>
-        </button>
-      </div>
-    </section>
-
     <!-- Main Tablet Grid: Left Sidebar + Right Arena -->
     <div class="tablet-grid-layout">
-      <!-- LEFT SIDEBAR: Rank, Scoreboard, Game Mode, Actions -->
+      <!-- LEFT SIDEBAR: Rank, Scoreboard, Match Info, Actions -->
       <aside class="tablet-sidebar">
         <!-- Star Rank & Level Card -->
         <section class="reward-summary-card">
@@ -110,16 +75,19 @@
             <div class="rank-avatar" id="playerRankAvatar">🌱</div>
             <div class="rank-details">
               <div class="rank-title" id="playerRankTitle">棋艺小萌芽</div>
-              <div class="rank-sub" id="streakText">当前连胜: 0 连胜 🔥</div>
+              <div class="rank-sub" id="streakText">连胜 0 🔥</div>
             </div>
           </div>
           <div class="progress-bar-container" title="收集星星升级棋艺称号！">
+            <div class="progress-bar-ticks" aria-hidden="true">
+              <span></span><span></span><span></span>
+            </div>
             <div class="progress-bar-fill" id="rankProgressBar" style="width: 0%;"></div>
           </div>
           <div class="progress-label" id="rankProgressLabel">0 / 10 颗星星升级下一级</div>
         </section>
 
-        <!-- Scoreboard (3 Toy Cards) -->
+        <!-- Scoreboard (3 Toy Cards Strictly Within Left Sidebar) -->
         <section class="scoreboard" aria-label="比分板">
           <!-- Player 1 (You) -->
           <div class="score-card player-x active" id="cardPlayerX">
@@ -149,48 +117,18 @@
           </div>
         </section>
 
-        <!-- Mode Selector -->
-        <section class="mode-bar">
-          <div class="mode-toggles">
-            <button id="modeAiBtn" class="mode-btn active" data-mode="ai">
-              🤖 单人挑战智能小伙伴
-            </button>
-            <button id="modePvPBtn" class="mode-btn" data-mode="pvp">
-              👥 双人对战 (与家长/小伙伴)
-            </button>
-          </div>
-
-          <!-- Bot Difficulty Selector with Dynamic Adaptation -->
-          <div id="aiDifficultyRow" class="difficulty-row">
-            <div class="diff-header">
-              <span class="diff-label">小伙伴战力水平:</span>
-              <span class="diff-dynamic-tag" id="dynamicLevelTag">✨ 动态进阶中</span>
-            </div>
-            <div class="diff-buttons">
-              <button class="diff-btn active" data-diff="auto" title="动态进阶：随连胜自动变强，输局贴心减难，越玩越聪明！">
-                ✨ 动态进阶 <span>(自适应)</span>
-              </button>
-              <button class="diff-btn" data-diff="easy" title="贪玩小猴：轻松获胜，自信满满！">
-                🐒 贪玩小猴 <span>(简单)</span>
-              </button>
-              <button class="diff-btn" data-diff="medium" title="机灵小狐：会防守，势均力敌！">
-                🦊 机灵小狐 <span>(中等)</span>
-              </button>
-              <button class="diff-btn" data-diff="hard" title="智慧猫头鹰：智慧大师挑战！">
-                🦉 智慧猫头鹰 <span>(大师)</span>
-              </button>
-            </div>
-            <div class="dynamic-status-bar" id="dynamicStatusBar">
-              <span class="dynamic-icon" id="dynamicTierIcon">🐒</span>
-              <span class="dynamic-hint" id="dynamicTierHint">当前状态：呆萌小猴陪练中，赢得本局将升级为机灵小狐！</span>
+        <!-- Compact Match Info Card with One-Tap Settings -->
+        <section class="match-info-card" id="matchInfoCard">
+          <div class="match-info-top">
+            <span class="match-info-icon" id="matchInfoIcon">🤖</span>
+            <div class="match-info-text-group">
+              <div class="match-info-title" id="matchInfoTitle">单人挑战 · 贪玩小猴</div>
+              <div class="match-info-desc" id="matchInfoDesc">随连胜动态进阶，越玩越聪明！</div>
             </div>
           </div>
-
-          <!-- PvP Friendly Tips Row -->
-          <div id="pvpTipRow" class="pvp-tip-row hidden">
-            <div class="pvp-tip-badge">👨‍👩‍👧 亲子欢乐对弈</div>
-            <div class="pvp-tip-text">两人轮流点格子下棋，先连成三颗萌宠的小朋友获胜并获得星星哦！✨</div>
-          </div>
+          <button id="quickSettingsBtn" class="pill-btn change-partner-btn" title="更换角色、游戏模式或战力">
+            <span>🎨 换角色 / 调整难度 ⚙️</span>
+          </button>
         </section>
 
         <!-- Sidebar Actions -->
@@ -198,35 +136,158 @@
           <button id="resetRoundBtn" class="pill-btn primary-action-btn">
             🔄 开始新一轮
           </button>
-          <button id="resetScoresBtn" class="pill-btn secondary-action-btn" title="清零本轮所有比分">
-            🏆 清零比分
+          <button id="resetScoresBtn" class="pill-btn secondary-action-btn" title="清空本轮所有比分">
+            🧹 清空比分
           </button>
         </div>
       </aside>
 
-      <!-- RIGHT ARENA: Turn Banner, 3x3 Board -->
+      <!-- RIGHT ARENA: Turn Banner, Enlarged Touch Board -->
       <main class="tablet-main-arena">
-        <!-- Turn Status Banner -->
-        <section class="status-banner" id="statusBanner">
+        <!-- Turn Status Banner (Color synchronized with active player) -->
+        <section class="status-banner turn-p1" id="statusBanner">
           <span class="status-icon" id="statusEmoji">🐶</span>
           <span class="status-text" id="statusText">轮到 你（小狗）下棋啦！请点击格子！</span>
         </section>
 
-        <!-- 3x3 Toy Touch Board -->
+        <!-- 3x3 Toy Touch Board (Enlarged to 85%-90% Arena, ~480px, Ghost Previews) -->
         <div class="board-wrapper">
-          <div class="board" id="board" role="grid" aria-label="三子棋盘">
-            <button class="cell" data-index="0" role="gridcell" aria-label="第1行第1格"></button>
-            <button class="cell" data-index="1" role="gridcell" aria-label="第1行第2格"></button>
-            <button class="cell" data-index="2" role="gridcell" aria-label="第1行第3格"></button>
-            <button class="cell" data-index="3" role="gridcell" aria-label="第2行第1格"></button>
-            <button class="cell" data-index="4" role="gridcell" aria-label="第2行第2格"></button>
-            <button class="cell" data-index="5" role="gridcell" aria-label="第2行第3格"></button>
-            <button class="cell" data-index="6" role="gridcell" aria-label="第3行第1格"></button>
-            <button class="cell" data-index="7" role="gridcell" aria-label="第3行第2格"></button>
-            <button class="cell" data-index="8" role="gridcell" aria-label="第3行第3格"></button>
+          <div class="board theme-pets" id="board" role="grid" aria-label="三子棋盘">
+            <button class="cell" data-index="0" data-preview="🐶" role="gridcell" aria-label="第1行第1格"></button>
+            <button class="cell" data-index="1" data-preview="🐶" role="gridcell" aria-label="第1行第2格"></button>
+            <button class="cell" data-index="2" data-preview="🐶" role="gridcell" aria-label="第1行第3格"></button>
+            <button class="cell" data-index="3" data-preview="🐶" role="gridcell" aria-label="第2行第1格"></button>
+            <button class="cell" data-index="4" data-preview="🐶" role="gridcell" aria-label="第2行第2格"></button>
+            <button class="cell" data-index="5" data-preview="🐶" role="gridcell" aria-label="第2行第3格"></button>
+            <button class="cell" data-index="6" data-preview="🐶" role="gridcell" aria-label="第3行第1格"></button>
+            <button class="cell" data-index="7" data-preview="🐶" role="gridcell" aria-label="第3行第2格"></button>
+            <button class="cell" data-index="8" data-preview="🐶" role="gridcell" aria-label="第3行第3格"></button>
           </div>
         </div>
       </main>
+    </div>
+  </div>
+
+  <!-- Settings Drawer / Modal (Mode, Difficulty, 4+3 Themes Grid) -->
+  <div class="modal-backdrop hidden" id="settingsModal">
+    <div class="modal-card settings-modal-card">
+      <div class="settings-modal-header">
+        <div class="header-title-box">
+          <span class="settings-modal-icon">⚙️</span>
+          <h2>游戏设置乐园</h2>
+        </div>
+        <button id="closeSettingsModalBtn" class="close-icon-btn" aria-label="关闭">✖</button>
+      </div>
+
+      <!-- Section 1: Game Mode Switcher -->
+      <div class="settings-section">
+        <h3 class="section-title">🎮 选择对战模式</h3>
+        <div class="mode-toggles-settings">
+          <button id="modeAiBtn" class="mode-btn-large active" data-mode="ai">
+            <span class="mode-emoji">🤖</span>
+            <span class="mode-text">单人挑战智能小伙伴</span>
+          </button>
+          <button id="modePvPBtn" class="mode-btn-large" data-mode="pvp">
+            <span class="mode-emoji">👥</span>
+            <span class="mode-text">亲子双人同屏对战</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Section 2: AI Bot Difficulty Selector (Only in AI Mode) -->
+      <div class="settings-section" id="aiDifficultySection">
+        <div class="diff-title-row">
+          <h3 class="section-title">🧠 小伙伴战力水平</h3>
+          <span class="diff-dynamic-tag" id="dynamicLevelTag">✨ 动态进阶中</span>
+        </div>
+        <div class="diff-buttons-settings">
+          <button class="diff-btn-large active" data-diff="auto" title="随连胜自动变强，输局贴心减难">
+            <span class="btn-emoji">✨</span>
+            <span class="btn-title">动态进阶</span>
+            <span class="btn-desc">越玩越聪明</span>
+          </button>
+          <button class="diff-btn-large" data-diff="easy" title="轻松获胜，自信满满">
+            <span class="btn-emoji">🐒</span>
+            <span class="btn-title">贪玩小猴</span>
+            <span class="btn-desc">轻松自信</span>
+          </button>
+          <button class="diff-btn-large" data-diff="medium" title="会防守，势均力敌">
+            <span class="btn-emoji">🦊</span>
+            <span class="btn-title">机灵小狐</span>
+            <span class="btn-desc">认真防守</span>
+          </button>
+          <button class="diff-btn-large" data-diff="hard" title="智慧大师全力对决">
+            <span class="btn-emoji">🦉</span>
+            <span class="btn-title">猫头鹰</span>
+            <span class="btn-desc">大师挑战</span>
+          </button>
+        </div>
+        <div class="dynamic-status-bar" id="dynamicStatusBar">
+          <span class="dynamic-icon" id="dynamicTierIcon">🐒</span>
+          <span class="dynamic-hint" id="dynamicTierHint">当前伙伴：贪玩小猴陪练中，连胜即可升级为机灵小狐！</span>
+        </div>
+      </div>
+
+      <!-- Section 3: Themes (Balanced 4+3 Grid, Classic ❌ vs ⭕) -->
+      <div class="settings-section">
+        <h3 class="section-title">🎨 挑选喜欢的萌宠角色搭档</h3>
+        <div class="themes-grid-settings" id="themeChips">
+          <!-- Row 1: 4 items -->
+          <button class="theme-card-btn active" data-theme="pets">
+            <span class="theme-card-emoji">🐶 vs 🐱</span>
+            <span class="theme-card-name">萌宠王国</span>
+          </button>
+          <button class="theme-card-btn" data-theme="space">
+            <span class="theme-card-emoji">🚀 vs 👽</span>
+            <span class="theme-card-name">星际太空</span>
+          </button>
+          <button class="theme-card-btn" data-theme="dino">
+            <span class="theme-card-emoji">🦖 vs 🌋</span>
+            <span class="theme-card-name">恐龙探险</span>
+          </button>
+          <button class="theme-card-btn" data-theme="magic">
+            <span class="theme-card-emoji">🦄 vs 🌈</span>
+            <span class="theme-card-name">魔法独角兽</span>
+          </button>
+
+          <!-- Row 2: 3 items -->
+          <button class="theme-card-btn" data-theme="sea">
+            <span class="theme-card-emoji">🐳 vs 🦀</span>
+            <span class="theme-card-name">深海萌友</span>
+          </button>
+          <button class="theme-card-btn" data-theme="sweet">
+            <span class="theme-card-emoji">🍦 vs 🍩</span>
+            <span class="theme-card-name">甜蜜甜点</span>
+          </button>
+          <button class="theme-card-btn" data-theme="classic">
+            <span class="theme-card-emoji">❌ vs ⭕</span>
+            <span class="theme-card-name">经典对决</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="modal-buttons" style="margin-top: 14px;">
+        <button id="settingsDoneBtn" class="modal-btn main-btn">
+          🌟 保存并开始下棋！
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Child-Safe Score Reset Confirmation Dialog -->
+  <div class="modal-backdrop hidden" id="confirmResetModal">
+    <div class="modal-card confirm-modal-card">
+      <div class="modal-decoration">🧹</div>
+      <h2 class="modal-title" style="color: #475569;">确定要把比分清零吗？</h2>
+      <p class="modal-subtitle">清空后比分将重新计分，不会扣除你已经收集的星星和勋章哦！</p>
+      <div class="modal-buttons">
+        <button id="cancelResetBtn" class="modal-btn main-btn">
+          🎮 继续下棋（不清除）
+        </button>
+        <button id="confirmResetActionBtn" class="modal-btn secondary-btn" style="background: #e2e8f0; color: #475569; box-shadow: 0 4px 0 #cbd5e1;">
+          🧹 确认清空比分
+        </button>
+      </div>
     </div>
   </div>
 
@@ -297,6 +358,6 @@
   <!-- Flying Star Animation Container -->
   <div id="starFlyContainer" class="star-fly-container"></div>
 
-  <script src="script.js?v=20261010-v9"></script>
+  <script src="script.js?v=20261011-v10"></script>
 </body>
 </html>

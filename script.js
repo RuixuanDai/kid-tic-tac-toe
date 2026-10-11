@@ -1,6 +1,6 @@
 /* =========================================================
    Super Fun Tic-Tac-Toe - Tablet & Kids Edition Game Engine
-   Featuring: Tablet Optimization, Star Bank & Reward Badges!
+   Featuring: Tablet Optimization, Star Bank, Dynamic AI & Child-Friendly UX!
    ========================================================= */
 
 // --- THEMES CONFIGURATION ---
@@ -25,20 +25,20 @@ const THEMES = {
     p1: { symbol: '🦄', name: '独角兽' },
     p2: { symbol: '🌈', name: '彩虹' }
   },
-  sweet: {
-    name: '甜蜜甜点',
-    p1: { symbol: '🍦', name: '冰淇淋' },
-    p2: { symbol: '🍩', name: '甜甜圈' }
-  },
   sea: {
     name: '深海萌友',
     p1: { symbol: '🐳', name: '小蓝鲸' },
     p2: { symbol: '🦀', name: '小红蟹' }
   },
+  sweet: {
+    name: '甜蜜甜点',
+    p1: { symbol: '🍦', name: '冰淇淋' },
+    p2: { symbol: '🍩', name: '甜甜圈' }
+  },
   classic: {
-    name: '经典 X vs O',
-    p1: { symbol: 'X', name: '红方(X)' },
-    p2: { symbol: 'O', name: '蓝方(O)' }
+    name: '经典对决',
+    p1: { symbol: '❌', name: '红叉(❌)' },
+    p2: { symbol: '⭕', name: '蓝圈(⭕)' }
   }
 };
 
@@ -72,7 +72,7 @@ const BADGES_CONFIG = [
     id: 'hard_bot',
     emoji: '🦉',
     title: '智慧小军师',
-    desc: '击败大师级智慧猫头鹰'
+    desc: '击败大师级猫头鹰'
   },
   {
     id: 'theme_fan',
@@ -275,7 +275,6 @@ class VoiceAnnouncer {
     if (!this.synth) return;
     const findVoice = () => {
       const voices = this.synth.getVoices();
-      // Look for natural Chinese Mandarin voice
       this.voice = voices.find(v => v.lang === 'zh-CN' || v.lang === 'zh_CN') ||
                    voices.find(v => v.lang.startsWith('zh') || v.lang.includes('cmn')) || null;
     };
@@ -348,19 +347,20 @@ class ConfettiCannon {
   }
 
   burst(count = 100) {
-    const colors = ['#ff4081', '#00b4d8', '#ffd166', '#06d6a0', '#9d4edd', '#ff9f1c'];
+    const colors = ['#ff3366', '#0284c7', '#f59e0b', '#10b981', '#8b5cf6', '#f43f5e', '#ec4899'];
     for (let i = 0; i < count; i++) {
       this.particles.push({
-        x: this.canvas.width / 2 + (Math.random() - 0.5) * 200,
-        y: this.canvas.height * 0.45,
+        x: this.canvas.width / 2 + (Math.random() - 0.5) * 80,
+        y: this.canvas.height * 0.45 + (Math.random() - 0.5) * 40,
         vx: (Math.random() - 0.5) * 16,
         vy: -Math.random() * 15 - 5,
         size: Math.random() * 10 + 6,
         color: colors[Math.floor(Math.random() * colors.length)],
         rotation: Math.random() * 360,
-        rotationSpeed: (Math.random() - 0.5) * 14,
-        shape: Math.random() > 0.5 ? 'circle' : 'rect',
-        opacity: 1
+        vRot: (Math.random() - 0.5) * 12,
+        gravity: 0.45,
+        alpha: 1,
+        shape: Math.random() > 0.4 ? 'circle' : 'rect'
       });
     }
 
@@ -376,21 +376,21 @@ class ConfettiCannon {
       const p = this.particles[i];
       p.x += p.vx;
       p.y += p.vy;
-      p.vy += 0.42;
+      p.vy += p.gravity;
       p.vx *= 0.985;
-      p.rotation += p.rotationSpeed;
-      p.opacity -= 0.007;
+      p.rotation += p.vRot;
+      p.alpha -= 0.012;
 
-      if (p.opacity <= 0 || p.y > this.canvas.height + 20) {
+      if (p.alpha <= 0 || p.y > this.canvas.height) {
         this.particles.splice(i, 1);
         continue;
       }
 
       this.ctx.save();
+      this.ctx.globalAlpha = Math.max(0, p.alpha);
+      this.ctx.fillStyle = p.color;
       this.ctx.translate(p.x, p.y);
       this.ctx.rotate((p.rotation * Math.PI) / 180);
-      this.ctx.globalAlpha = Math.max(0, p.opacity);
-      this.ctx.fillStyle = p.color;
 
       if (p.shape === 'circle') {
         this.ctx.beginPath();
@@ -483,12 +483,18 @@ class TicTacToeGame {
 
     // Header & Rewards
     this.headerStarCount = document.getElementById('headerStarCount');
+    this.rewardBtnLabel = document.getElementById('rewardBtnLabel');
     this.openRewardBtn = document.getElementById('openRewardBtn');
     this.playerRankAvatar = document.getElementById('playerRankAvatar');
     this.playerRankTitle = document.getElementById('playerRankTitle');
     this.streakText = document.getElementById('streakText');
     this.rankProgressBar = document.getElementById('rankProgressBar');
     this.rankProgressLabel = document.getElementById('rankProgressLabel');
+
+    // Header Sound & Settings
+    this.soundToggleBtn = document.getElementById('soundToggleBtn');
+    this.soundIcon = document.getElementById('soundIcon');
+    this.openSettingsBtn = document.getElementById('openSettingsBtn');
 
     // Scoreboard
     this.cardPlayerX = document.getElementById('cardPlayerX');
@@ -501,22 +507,34 @@ class TicTacToeGame {
     this.scoreOEl = document.getElementById('scoreO');
     this.scoreTiesEl = document.getElementById('scoreTies');
 
-    // Controls
-    this.themeChips = document.querySelectorAll('.theme-chip');
+    // Match Info Card
+    this.matchInfoIcon = document.getElementById('matchInfoIcon');
+    this.matchInfoTitle = document.getElementById('matchInfoTitle');
+    this.matchInfoDesc = document.getElementById('matchInfoDesc');
+    this.quickSettingsBtn = document.getElementById('quickSettingsBtn');
+
+    // Sidebar Action Buttons
+    this.resetRoundBtn = document.getElementById('resetRoundBtn');
+    this.resetScoresBtn = document.getElementById('resetScoresBtn');
+
+    // Settings Modal
+    this.settingsModal = document.getElementById('settingsModal');
+    this.closeSettingsModalBtn = document.getElementById('closeSettingsModalBtn');
+    this.settingsDoneBtn = document.getElementById('settingsDoneBtn');
     this.modePvPBtn = document.getElementById('modePvPBtn');
     this.modeAiBtn = document.getElementById('modeAiBtn');
-    this.aiDifficultyRow = document.getElementById('aiDifficultyRow');
-    this.pvpTipRow = document.getElementById('pvpTipRow');
-    this.diffButtons = document.querySelectorAll('.diff-btn');
+    this.aiDifficultySection = document.getElementById('aiDifficultySection');
+    this.diffButtons = document.querySelectorAll('.diff-btn-large');
     this.dynamicLevelTag = document.getElementById('dynamicLevelTag');
     this.dynamicStatusBar = document.getElementById('dynamicStatusBar');
     this.dynamicTierIcon = document.getElementById('dynamicTierIcon');
     this.dynamicTierHint = document.getElementById('dynamicTierHint');
-    this.soundToggleBtn = document.getElementById('soundToggleBtn');
-    this.soundIcon = document.getElementById('soundIcon');
-    this.soundText = document.getElementById('soundText');
-    this.resetRoundBtn = document.getElementById('resetRoundBtn');
-    this.resetScoresBtn = document.getElementById('resetScoresBtn');
+    this.themeChips = document.querySelectorAll('.theme-card-btn');
+
+    // Reset Confirm Modal
+    this.confirmResetModal = document.getElementById('confirmResetModal');
+    this.cancelResetBtn = document.getElementById('cancelResetBtn');
+    this.confirmResetActionBtn = document.getElementById('confirmResetActionBtn');
 
     // Win Modal
     this.resultModal = document.getElementById('resultModal');
@@ -527,7 +545,7 @@ class TicTacToeGame {
     this.rewardGainSub = document.getElementById('rewardGainSub');
     this.modalPlayAgainBtn = document.getElementById('modalPlayAgainBtn');
 
-    // Reward Modal
+    // Reward Badges Modal
     this.rewardModal = document.getElementById('rewardModal');
     this.closeRewardModalBtn = document.getElementById('closeRewardModalBtn');
     this.rewardCloseActionBtn = document.getElementById('rewardCloseActionBtn');
@@ -544,7 +562,7 @@ class TicTacToeGame {
       cell.addEventListener('click', (e) => this.handleCellClick(e));
     });
 
-    // Theme selector
+    // Theme selector (inside Settings Modal)
     this.themeChips.forEach(chip => {
       chip.addEventListener('click', () => {
         this.sound.playClick();
@@ -564,27 +582,75 @@ class TicTacToeGame {
       });
     });
 
-    // Sound toggle
+    // Sound toggle (pure icon 🔊 / 🔇)
     this.soundToggleBtn.addEventListener('click', () => this.toggleSound());
 
-    // Reset buttons
+    // Settings Modal Triggers
+    this.openSettingsBtn.addEventListener('click', () => {
+      this.sound.playClick();
+      this.openSettingsModal();
+    });
+
+    this.quickSettingsBtn.addEventListener('click', () => {
+      this.sound.playClick();
+      this.openSettingsModal();
+    });
+
+    this.closeSettingsModalBtn.addEventListener('click', () => {
+      this.sound.playClick();
+      this.closeSettingsModal();
+    });
+
+    this.settingsDoneBtn.addEventListener('click', () => {
+      this.sound.playClick();
+      this.closeSettingsModal();
+      this.voice.speak('设置好啦，开始下棋！', true);
+    });
+
+    this.settingsModal.addEventListener('click', (e) => {
+      if (e.target === this.settingsModal) {
+        this.closeSettingsModal();
+      }
+    });
+
+    // Reset Round button
     this.resetRoundBtn.addEventListener('click', () => {
       this.sound.playClick();
       this.resetRound();
     });
 
+    // Child-Safe Reset Scores button with confirmation
     this.resetScoresBtn.addEventListener('click', () => {
       this.sound.playClick();
-      this.resetScores();
+      this.confirmResetModal.classList.remove('hidden');
     });
 
-    // Modals
+    this.cancelResetBtn.addEventListener('click', () => {
+      this.sound.playClick();
+      this.confirmResetModal.classList.add('hidden');
+    });
+
+    this.confirmResetModal.addEventListener('click', (e) => {
+      if (e.target === this.confirmResetModal) {
+        this.confirmResetModal.classList.add('hidden');
+      }
+    });
+
+    this.confirmResetActionBtn.addEventListener('click', () => {
+      this.sound.playClick();
+      this.confirmResetModal.classList.add('hidden');
+      this.resetScores();
+      this.voice.speak('比分已清零，开始新的对局！', true);
+    });
+
+    // Win Modal
     this.modalPlayAgainBtn.addEventListener('click', () => {
       this.sound.playClick();
       this.closeResultModal();
       this.resetRound();
     });
 
+    // Reward Album Modal
     this.openRewardBtn.addEventListener('click', () => {
       this.sound.playClick();
       this.openRewardModal();
@@ -614,6 +680,15 @@ class TicTacToeGame {
     return RANKS[0];
   }
 
+  openSettingsModal() {
+    this.settingsModal.classList.remove('hidden');
+    this.voice.speak('进入游戏设置，挑选你喜欢的角色和难度！', true);
+  }
+
+  closeSettingsModal() {
+    this.settingsModal.classList.add('hidden');
+  }
+
   setTheme(themeKey) {
     if (!THEMES[themeKey]) return;
     this.currentThemeKey = themeKey;
@@ -624,6 +699,9 @@ class TicTacToeGame {
     this.themeChips.forEach(chip => {
       chip.classList.toggle('active', chip.dataset.theme === themeKey);
     });
+
+    // Update board theme appearance
+    this.boardEl.className = `board theme-${themeKey}`;
 
     this.updateThemeUI();
     this.updateBoardSymbols();
@@ -642,6 +720,30 @@ class TicTacToeGame {
     } else {
       this.namePlayerXEl.textContent = `玩家1 (${t.p1.name})`;
       this.namePlayerOEl.textContent = `玩家2 (${t.p2.name})`;
+    }
+
+    this.updateMatchInfoUI();
+  }
+
+  updateMatchInfoUI() {
+    const t = this.theme;
+    if (this.gameMode === 'ai') {
+      const effective = this.getEffectiveAiDifficulty();
+      const diffNames = { easy: '贪玩小猴', medium: '机灵小狐', hard: '猫头鹰' };
+      const diffIcons = { easy: '🐒', medium: '🦊', hard: '🦉' };
+      
+      this.matchInfoIcon.textContent = diffIcons[effective] || '🤖';
+      if (this.aiDifficulty === 'auto') {
+        this.matchInfoTitle.textContent = `单人挑战 · ${diffNames[effective]}`;
+        this.matchInfoDesc.textContent = `动态进阶中 · 连胜自动升级变强！`;
+      } else {
+        this.matchInfoTitle.textContent = `单人挑战 · ${diffNames[effective]}`;
+        this.matchInfoDesc.textContent = `已锁定为${diffNames[effective]}陪练`;
+      }
+    } else {
+      this.matchInfoIcon.textContent = '👥';
+      this.matchInfoTitle.textContent = `亲子双人同屏对战`;
+      this.matchInfoDesc.textContent = `${t.p1.name} vs ${t.p2.name}，轮流点格子！`;
     }
   }
 
@@ -669,13 +771,11 @@ class TicTacToeGame {
     this.modeAiBtn.classList.toggle('active', mode === 'ai');
 
     if (mode === 'ai') {
-      this.aiDifficultyRow.classList.remove('hidden');
-      if (this.pvpTipRow) this.pvpTipRow.classList.add('hidden');
+      this.aiDifficultySection.style.display = 'flex';
       this.updateDynamicDifficultyUI();
       this.voice.speak('开启单人挑战，和电脑小伙伴下棋！', true);
     } else {
-      this.aiDifficultyRow.classList.add('hidden');
-      if (this.pvpTipRow) this.pvpTipRow.classList.remove('hidden');
+      this.aiDifficultySection.style.display = 'none';
       this.voice.speak('开启双人对战，和小伙伴一起下棋！', true);
     }
 
@@ -695,7 +795,7 @@ class TicTacToeGame {
     } else if (diff === 'medium') {
       this.voice.speak('已锁定为机灵小狐中等模式！', true);
     } else if (diff === 'hard') {
-      this.voice.speak('已挑战智慧猫头鹰大师模式！', true);
+      this.voice.speak('已挑战猫头鹰大师模式！', true);
     }
     this.updateDynamicDifficultyUI();
     this.resetRound();
@@ -709,13 +809,11 @@ class TicTacToeGame {
       this.sound.playClick();
       this.soundToggleBtn.classList.remove('muted');
       this.soundIcon.textContent = '🔊';
-      this.soundText.textContent = '语音 开';
       this.voice.speak('语音与音效已开启！', true);
     } else {
       this.voice.stop();
       this.soundToggleBtn.classList.add('muted');
       this.soundIcon.textContent = '🔇';
-      this.soundText.textContent = '语音 关';
     }
   }
 
@@ -740,6 +838,7 @@ class TicTacToeGame {
     const symbol = player === 'X' ? this.theme.p1.symbol : this.theme.p2.symbol;
 
     cell.textContent = symbol;
+    cell.removeAttribute('data-preview');
     cell.classList.remove('cell-x', 'cell-o');
     cell.classList.add('filled', 'pop-in', player === 'X' ? 'cell-x' : 'cell-o');
     this.sound.playPop(player);
@@ -774,8 +873,7 @@ class TicTacToeGame {
   triggerBotMove() {
     this.isBotThinking = true;
     const botName = this.theme.p2.name;
-    this.statusBanner.classList.remove('turn-p1', 'turn-p2');
-    this.statusBanner.classList.add('bot-thinking');
+    this.statusBanner.className = 'status-banner bot-thinking';
     this.statusEmoji.textContent = '🤔';
     this.statusText.textContent = `${botName} 正在动脑筋思考中...`;
 
@@ -820,30 +918,32 @@ class TicTacToeGame {
 
       if (effective === 'hard') {
         this.dynamicTierIcon.textContent = '🦉';
-        this.dynamicTierHint.textContent = `达成 ${this.streak} 连胜！大师猫头鹰使出全力，看谁能连成三颗！🔥`;
+        this.dynamicTierHint.textContent = `达成 ${this.streak} 连胜！猫头鹰使出大师战力，看谁能三连！🔥`;
         if (showVoiceAnnouncement) {
           this.voice.speak('太厉害啦！连胜升级，猫头鹰使出大师全力啦！', true);
         }
       } else if (effective === 'medium') {
         this.dynamicTierIcon.textContent = '🦊';
-        this.dynamicTierHint.textContent = `达成 1 连胜！小伙伴升级为机灵小狐，开始认真防守啦！`;
+        this.dynamicTierHint.textContent = `达成 1 连胜！升级为机灵小狐，开始认真防守啦！`;
         if (showVoiceAnnouncement) {
           this.voice.speak('恭喜连胜！电脑升级为机灵小狐，开始认真动脑筋啦！', true);
         }
       } else {
         this.dynamicTierIcon.textContent = '🐒';
-        this.dynamicTierHint.textContent = '当前为呆萌小猴陪练中，赢得本局将升级为机灵小狐！';
+        this.dynamicTierHint.textContent = '当前伙伴：贪玩小猴陪练中，连胜即可升级为机灵小狐！';
         if (showVoiceAnnouncement && this.streak === 0) {
           this.voice.speak('别灰心！电脑小伙伴放慢了脚步，再来一局赢回来！', true);
         }
       }
     } else {
-      const names = { easy: '贪玩小猴 (简单)', medium: '机灵小狐 (中等)', hard: '智慧猫头鹰 (大师)' };
+      const names = { easy: '贪玩小猴 (简单)', medium: '机灵小狐 (中等)', hard: '猫头鹰 (大师)' };
       const icons = { easy: '🐒', medium: '🦊', hard: '🦉' };
       if (this.dynamicLevelTag) this.dynamicLevelTag.textContent = '🔒 固定模式';
       this.dynamicTierIcon.textContent = icons[this.aiDifficulty] || '🔒';
       this.dynamicTierHint.textContent = `已锁定模式：${names[this.aiDifficulty] || ''}（不随战绩变动）`;
     }
+
+    this.updateMatchInfoUI();
   }
 
   calculateBestMove() {
@@ -884,7 +984,7 @@ class TicTacToeGame {
       }
     }
 
-    // MEDIUM:
+    // MEDIUM: Take center if free or choose random
     if (diff === 'medium') {
       if (available.includes(4) && Math.random() > 0.3) return 4;
       return available[Math.floor(Math.random() * available.length)];
@@ -987,7 +1087,7 @@ class TicTacToeGame {
         }
 
         if (diffUpgraded) {
-          const newName = newDiff === 'hard' ? '智慧猫头鹰 (大师)' : '机灵小狐 (中等)';
+          const newName = newDiff === 'hard' ? '猫头鹰 (大师)' : '机灵小狐 (中等)';
           bonusText = `战力进阶！🔥 电脑小伙伴升级为【${newName}】！`;
         }
 
@@ -1006,7 +1106,7 @@ class TicTacToeGame {
         setTimeout(() => this.sound.playStarChime(), 400);
         this.confetti.burst(130);
         if (diffUpgraded) {
-          const newName = newDiff === 'hard' ? '智慧猫头鹰大师' : '机灵小狐';
+          const newName = newDiff === 'hard' ? '猫头鹰大师' : '机灵小狐';
           this.voice.speak(`太棒啦！达成连胜，电脑小伙伴自动升级为${newName}啦！`, true);
         } else {
           this.voice.speak('太棒啦！你战胜了电脑小伙伴，奖励三颗星星！', true);
@@ -1170,7 +1270,13 @@ class TicTacToeGame {
 
   updateRewardsUI() {
     this.headerStarCount.textContent = this.stars;
-    this.streakText.textContent = `当前连胜: ${this.streak} 连胜 🔥`;
+    if (this.stars === 0) {
+      this.rewardBtnLabel.textContent = '去赢星星！🎁';
+    } else {
+      this.rewardBtnLabel.textContent = '奖励馆 🎁';
+    }
+    
+    this.streakText.textContent = `连胜 ${this.streak} 🔥`;
 
     const rank = this.currentRank;
     this.playerRankAvatar.textContent = rank.avatar;
@@ -1206,7 +1312,6 @@ class TicTacToeGame {
 
       this.starFlyContainer.appendChild(star);
 
-      // Animate towards the star bank in the header
       star.animate([
         { transform: 'translate(0, 0) scale(1.6)', opacity: 1 },
         { transform: `translate(${targetX - startX}px, ${targetY - startY}px) scale(0.6)`, opacity: 0.9 },
@@ -1268,7 +1373,17 @@ class TicTacToeGame {
     this.cardPlayerX.classList.toggle('active', isP1);
     this.cardPlayerO.classList.toggle('active', !isP1);
 
-    this.statusBanner.classList.remove('turn-p1', 'turn-p2', 'bot-thinking');
+    // Update ghost silhouette preview on all empty cells
+    const nextSymbol = isP1 ? this.theme.p1.symbol : this.theme.p2.symbol;
+    this.cells.forEach(cell => {
+      if (!cell.classList.contains('filled')) {
+        cell.setAttribute('data-preview', nextSymbol);
+      } else {
+        cell.removeAttribute('data-preview');
+      }
+    });
+
+    this.statusBanner.className = 'status-banner';
 
     if (this.gameMode === 'ai') {
       if (isP1) {
@@ -1278,7 +1393,7 @@ class TicTacToeGame {
       } else {
         this.statusBanner.classList.add('bot-thinking');
         this.statusText.textContent = `电脑（${char.name}）正在动脑筋思考中...`;
-        this.statusEmoji.textContent = '🤖';
+        this.statusEmoji.textContent = '🤔';
       }
     } else {
       if (isP1) {
