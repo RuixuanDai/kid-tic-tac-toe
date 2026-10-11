@@ -97,13 +97,13 @@ body {
 
 /* Tablet Layout Outer Container */
 .tablet-layout-container {
-  width: 100%;
-  max-width: 960px;
+  width: min(96%, 1040px);
+  max-width: 1040px;
   background: var(--card-bg);
   backdrop-filter: blur(14px);
   border-radius: 34px;
   box-shadow: var(--card-shadow);
-  padding: 20px 22px 24px 22px;
+  padding: 18px 22px 22px 22px;
   border: 4px solid #ffffff;
   display: flex;
   flex-direction: column;
@@ -250,9 +250,18 @@ body {
   gap: 18px;
 }
 
-@media (min-width: 768px) {
+@media (min-width: 768px) and (max-width: 859px) {
   .tablet-grid-layout {
-    grid-template-columns: 320px 1fr;
+    grid-template-columns: 310px 1fr;
+    gap: 16px;
+    align-items: stretch;
+  }
+}
+
+@media (min-width: 860px) {
+  .tablet-grid-layout {
+    grid-template-columns: 340px 1fr;
+    gap: 22px;
     align-items: stretch;
   }
 }
@@ -341,29 +350,31 @@ body {
   padding: 10px 8px;
   display: flex;
   align-items: center;
-  gap: 7px;
+  gap: 8px;
   position: relative;
   transition: all 0.25s ease;
 }
 
 .avatar-badge {
-  font-size: 1.95rem;
+  font-size: 2rem;
   line-height: 1;
   filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
   transition: transform 0.2s ease;
+  flex-shrink: 0;
 }
 
 .score-info {
   display: flex;
   flex-direction: column;
   min-width: 0;
+  padding-right: 2px;
 }
 
 .player-name {
   font-size: 0.78rem;
   font-weight: 700;
   color: var(--text-muted);
-  max-width: 85px;
+  max-width: 95px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -414,28 +425,33 @@ body {
   opacity: 0.95;
 }
 
-.score-card .turn-indicator-dot {
+/* Floating Active Turn Badge (Zero Text Overlap) */
+.score-card.active::before {
+  content: '出招中 ✨';
   position: absolute;
-  top: 7px;
-  right: 7px;
-  width: 9px;
-  height: 9px;
-  border-radius: 50%;
-  border: 1.5px solid #ffffff;
-  display: none;
-  animation: softGlow 1.4s infinite ease-in-out;
+  top: -11px;
+  right: 6px;
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 1px 7px;
+  border-radius: 999px;
+  color: #ffffff;
+  animation: bounceMini 1.2s infinite ease-in-out;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+  z-index: 5;
+  white-space: nowrap;
 }
 
-.score-card.player-x.active .turn-indicator-dot {
-  display: block;
-  background: #ff2a6d;
-  box-shadow: 0 0 0 2px rgba(255, 42, 109, 0.3);
+.score-card.player-x.active::before {
+  background: linear-gradient(135deg, #ff2a6d, #f43f5e);
 }
 
-.score-card.player-o.active .turn-indicator-dot {
-  display: block;
-  background: #0284c7;
-  box-shadow: 0 0 0 2px rgba(2, 132, 199, 0.3);
+.score-card.player-o.active::before {
+  background: linear-gradient(135deg, #0284c7, #0ea5e9);
+}
+
+.score-card .turn-indicator-dot {
+  display: none !important;
 }
 
 /* Mode Bar */
@@ -634,30 +650,23 @@ body {
 
 .theme-chips {
   display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
   gap: 8px;
-  overflow-x: auto;
-  scrollbar-width: none; /* Firefox */
-  -ms-overflow-style: none; /* IE / Edge */
-  padding: 4px 2px;
-  -webkit-overflow-scrolling: touch;
-}
-
-.theme-chips::-webkit-scrollbar {
-  display: none; /* Hides default Windows scrollbar track and arrows */
-  width: 0;
-  height: 0;
+  padding: 2px 2px;
 }
 
 .theme-chip {
   font-family: var(--font-family);
-  display: flex;
+  display: inline-flex;
   align-items: center;
   gap: 6px;
   background: #f8fafc;
   border: 2px solid #e2e8f0;
-  padding: 7px 14px;
+  padding: 6px 13px;
   border-radius: 999px;
-  font-size: 0.88rem;
+  font-size: 0.86rem;
   font-weight: 700;
   color: var(--text-dark);
   cursor: pointer;
@@ -665,6 +674,10 @@ body {
   flex-shrink: 0;
   transition: all 0.15s ease;
   box-shadow: 0 3px 0 #cbd5e1;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  touch-action: manipulation;
 }
 
 .theme-chip .c-x { color: #ff2a6d; }
@@ -766,8 +779,8 @@ body {
   grid-template-columns: repeat(3, 1fr);
   grid-template-rows: repeat(3, 1fr);
   gap: 12px;
-  width: min(100%, 380px);
-  height: 380px;
+  width: min(100%, 415px);
+  height: 415px;
   background: #e8ecf4;
   padding: 12px;
   border-radius: 28px;
@@ -783,11 +796,14 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 3.2rem;
+  font-size: 3.5rem;
   line-height: 1;
   cursor: pointer;
   transition: transform 0.12s ease, box-shadow 0.12s ease, background-color 0.2s ease, border-color 0.2s ease;
   user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  touch-action: manipulation;
   outline: none;
   width: 100%;
   height: 100%;
@@ -1163,6 +1179,11 @@ body {
 @keyframes softGlow {
   0%, 100% { transform: scale(1); opacity: 1; }
   50% { transform: scale(1.28); opacity: 0.85; }
+}
+
+@keyframes bounceMini {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-3px); }
 }
 
 @keyframes bounceEmoji {
