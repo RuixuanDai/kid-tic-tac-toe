@@ -36,9 +36,9 @@ const THEMES = {
     p2: { symbol: '🦀', name: '小红蟹' }
   },
   classic: {
-    name: '经典符号',
-    p1: { symbol: '❌', name: '红叉' },
-    p2: { symbol: '⭕', name: '蓝圈' }
+    name: '经典 X vs O',
+    p1: { symbol: 'X', name: '红方(X)' },
+    p2: { symbol: 'O', name: '蓝方(O)' }
   }
 };
 
@@ -558,12 +558,13 @@ class TicTacToeGame {
     const t = this.theme;
     this.avatarXEl.textContent = t.p1.symbol;
     this.avatarOEl.textContent = t.p2.symbol;
-    this.namePlayerXEl.textContent = t.p1.name;
 
     if (this.gameMode === 'ai') {
-      this.namePlayerOEl.textContent = `电脑(${t.p2.name})`;
+      this.namePlayerXEl.textContent = `你 (${t.p1.name})`;
+      this.namePlayerOEl.textContent = `电脑 (${t.p2.name})`;
     } else {
-      this.namePlayerOEl.textContent = t.p2.name;
+      this.namePlayerXEl.textContent = `玩家1 (${t.p1.name})`;
+      this.namePlayerOEl.textContent = `玩家2 (${t.p2.name})`;
     }
   }
 
@@ -571,10 +572,13 @@ class TicTacToeGame {
     const t = this.theme;
     this.cells.forEach((cell, idx) => {
       const val = this.board[idx];
+      cell.classList.remove('cell-x', 'cell-o');
       if (val === 'X') {
         cell.textContent = t.p1.symbol;
+        cell.classList.add('cell-x');
       } else if (val === 'O') {
         cell.textContent = t.p2.symbol;
+        cell.classList.add('cell-o');
       }
     });
   }
@@ -640,7 +644,8 @@ class TicTacToeGame {
     const symbol = player === 'X' ? this.theme.p1.symbol : this.theme.p2.symbol;
 
     cell.textContent = symbol;
-    cell.classList.add('filled', 'pop-in');
+    cell.classList.remove('cell-x', 'cell-o');
+    cell.classList.add('filled', 'pop-in', player === 'X' ? 'cell-x' : 'cell-o');
     this.sound.playPop(player);
 
     const winCombo = this.checkWin(this.board, player);
@@ -795,61 +800,113 @@ class TicTacToeGame {
     const isP1 = winner === 'X';
     const winnerChar = isP1 ? this.theme.p1 : this.theme.p2;
 
-    // --- REWARDS CALCULATION ---
-    let starsEarned = 3; // Base win reward
+    let starsEarned = 3;
     let bonusText = '获胜奖励！';
 
-    if (isP1) {
-      this.totalWins++;
-      this.streak++;
-      if (this.streak > this.maxStreak) {
-        this.maxStreak = this.streak;
-      }
+    if (this.gameMode === 'ai') {
+      if (isP1) {
+        // Player beats computer!
+        this.totalWins++;
+        this.streak++;
+        if (this.streak > this.maxStreak) this.maxStreak = this.streak;
 
-      if (this.streak >= 2) {
-        starsEarned += 2; // Streak bonus
-        bonusText = `连胜奖励！🔥 当前 ${this.streak} 连胜！`;
-      }
+        if (this.streak >= 2) {
+          starsEarned += 2;
+          bonusText = `连胜奖励！🔥 达成 ${this.streak} 连胜！`;
+        }
 
-      if (this.gameMode === 'ai') {
         this.unlockBadge('bot_win');
         if (this.aiDifficulty === 'hard') {
           this.unlockBadge('hard_bot');
         }
+
+        this.stars += starsEarned;
+        this.checkBadges();
+        this.saveRewardsData();
+        this.updateRewardsUI();
+
+        this.sound.playWinFanfare();
+        setTimeout(() => this.sound.playStarChime(), 400);
+        this.confetti.burst(130);
+
+        this.statusEmoji.textContent = '🏆';
+        this.statusText.textContent = `🎉 太棒啦！你战胜了电脑小伙伴！`;
+
+        this.spawnFlyingStars(starsEarned);
+
+        setTimeout(() => {
+          this.modalEmoji.textContent = '👑';
+          this.modalTitle.textContent = '🎉 你赢啦！太棒了！';
+          this.modalSubtitle.textContent = `恭喜你机智战胜了电脑（${this.theme.p2.name}）！连成三颗一排！`;
+          this.rewardGainBanner.querySelector('.gain-stars').textContent = `⭐ +${starsEarned} 颗星星`;
+          this.rewardGainSub.textContent = bonusText;
+          this.resultModal.classList.remove('hidden');
+        }, 700);
+
+      } else {
+        // Computer wins!
+        this.streak = 0;
+        starsEarned = 1; // Encouragement reward
+        bonusText = '努力挑战奖励！不要气馁哦！';
+
+        this.stars += starsEarned;
+        this.checkBadges();
+        this.saveRewardsData();
+        this.updateRewardsUI();
+
+        this.sound.playTieSound();
+        this.statusEmoji.textContent = '🤖';
+        this.statusText.textContent = `🤖 电脑（${this.theme.p2.name}）获胜！点击再来一局赢回来！`;
+
+        this.spawnFlyingStars(1);
+
+        setTimeout(() => {
+          this.modalEmoji.textContent = '🤖';
+          this.modalTitle.textContent = '🤖 电脑小伙伴获胜啦！';
+          this.modalSubtitle.textContent = `电脑这次抢先连成了三排！差一点点就赢了，马上赢回来吧！`;
+          this.rewardGainBanner.querySelector('.gain-stars').textContent = `⭐ +1 颗星星`;
+          this.rewardGainSub.textContent = bonusText;
+          this.resultModal.classList.remove('hidden');
+        }, 700);
       }
     } else {
-      // If P2 wins
-      if (this.gameMode === 'ai') {
-        this.streak = 0; // Reset streak if bot wins
+      // 2 Players Mode
+      if (isP1) {
+        this.totalWins++;
+        this.streak++;
+        if (this.streak > this.maxStreak) this.maxStreak = this.streak;
+        if (this.streak >= 2) {
+          starsEarned += 2;
+          bonusText = `连胜奖励！🔥 达成 ${this.streak} 连胜！`;
+        }
       } else {
         this.streak = 0;
       }
+
+      this.stars += starsEarned;
+      this.checkBadges();
+      this.saveRewardsData();
+      this.updateRewardsUI();
+
+      this.sound.playWinFanfare();
+      setTimeout(() => this.sound.playStarChime(), 400);
+      this.confetti.burst(120);
+
+      const pLabel = isP1 ? '玩家 1' : '玩家 2';
+      this.statusEmoji.textContent = '🏆';
+      this.statusText.textContent = `🎉 恭喜！${pLabel}（${winnerChar.name}）获胜！`;
+
+      this.spawnFlyingStars(starsEarned);
+
+      setTimeout(() => {
+        this.modalEmoji.textContent = winnerChar.symbol;
+        this.modalTitle.textContent = `🎉 ${pLabel} 获胜啦！`;
+        this.modalSubtitle.textContent = `恭喜 ${pLabel}（${winnerChar.name}）连成三排！实力超强！`;
+        this.rewardGainBanner.querySelector('.gain-stars').textContent = `⭐ +${starsEarned} 颗星星`;
+        this.rewardGainSub.textContent = bonusText;
+        this.resultModal.classList.remove('hidden');
+      }, 700);
     }
-
-    this.stars += starsEarned;
-    this.checkBadges();
-    this.saveRewardsData();
-    this.updateRewardsUI();
-
-    this.sound.playWinFanfare();
-    setTimeout(() => this.sound.playStarChime(), 400);
-    this.confetti.burst(120);
-
-    this.statusEmoji.textContent = '🏆';
-    this.statusText.textContent = `🎉 恭喜！${winnerChar.name} 获胜！`;
-
-    // Trigger star fly animation
-    this.spawnFlyingStars(3);
-
-    // Show celebration modal
-    setTimeout(() => {
-      this.modalEmoji.textContent = winnerChar.symbol;
-      this.modalTitle.textContent = `${winnerChar.name} 获胜啦！🌟`;
-      this.modalSubtitle.textContent = `连成三颗一排，真是太棒了！`;
-      this.rewardGainBanner.querySelector('.gain-stars').textContent = `⭐ +${starsEarned} 颗星星`;
-      this.rewardGainSub.textContent = bonusText;
-      this.resultModal.classList.remove('hidden');
-    }, 700);
   }
 
   handleTie() {
@@ -857,7 +914,6 @@ class TicTacToeGame {
     this.scores.ties++;
     this.updateScoreboard();
 
-    // Reward for playing nicely in a tie
     this.stars += 1;
     this.checkBadges();
     this.saveRewardsData();
@@ -865,18 +921,30 @@ class TicTacToeGame {
 
     this.sound.playTieSound();
     this.statusEmoji.textContent = '🤝';
-    this.statusText.textContent = "棋逢对手！这是一场平局！";
+
+    if (this.gameMode === 'ai') {
+      this.statusText.textContent = "🤝 你和电脑打成平手！棋逢对手！";
+      setTimeout(() => {
+        this.modalEmoji.textContent = '🤝';
+        this.modalTitle.textContent = "🤝 握手言和！平局！";
+        this.modalSubtitle.textContent = "你和电脑小伙伴旗鼓相当，动脑筋很厉害！";
+        this.rewardGainBanner.querySelector('.gain-stars').textContent = "⭐ +1 颗星星";
+        this.rewardGainSub.textContent = "平局鼓励奖！准备好下一场决战了吗？";
+        this.resultModal.classList.remove('hidden');
+      }, 600);
+    } else {
+      this.statusText.textContent = "🤝 两位小朋友打成平手！棋逢对手！";
+      setTimeout(() => {
+        this.modalEmoji.textContent = '🤝';
+        this.modalTitle.textContent = "🤝 势均力敌！打成平局！";
+        this.modalSubtitle.textContent = "双方实力相当，难解难分！";
+        this.rewardGainBanner.querySelector('.gain-stars').textContent = "⭐ +1 颗星星";
+        this.rewardGainSub.textContent = "参与鼓励奖！准备好下一场决战了吗？";
+        this.resultModal.classList.remove('hidden');
+      }, 600);
+    }
 
     this.spawnFlyingStars(1);
-
-    setTimeout(() => {
-      this.modalEmoji.textContent = '🤝';
-      this.modalTitle.textContent = "势均力敌，打成平局！🎈";
-      this.modalSubtitle.textContent = "两个小朋友都非常机智，难解难分！";
-      this.rewardGainBanner.querySelector('.gain-stars').textContent = "⭐ +1 颗星星";
-      this.rewardGainSub.textContent = "参与鼓励奖！准备好下一场决战了吗？";
-      this.resultModal.classList.remove('hidden');
-    }, 600);
   }
 
   checkBadges() {
@@ -985,11 +1053,18 @@ class TicTacToeGame {
     this.cardPlayerX.classList.toggle('active', isP1);
     this.cardPlayerO.classList.toggle('active', !isP1);
 
-    this.statusEmoji.textContent = char.symbol;
-    if (this.gameMode === 'ai' && !isP1) {
-      this.statusText.textContent = `${char.name} 正在认真思考...`;
+    if (this.gameMode === 'ai') {
+      if (isP1) {
+        this.statusText.textContent = `轮到 你（${char.name}）下棋啦！请点击格子！`;
+        this.statusEmoji.textContent = char.symbol;
+      } else {
+        this.statusText.textContent = `电脑（${char.name}）正在动脑筋思考中...`;
+        this.statusEmoji.textContent = '🤖';
+      }
     } else {
-      this.statusText.textContent = `轮到 ${char.name} 啦！快点选格子下棋！`;
+      const pLabel = isP1 ? '玩家 1' : '玩家 2';
+      this.statusText.textContent = `轮到 ${pLabel}（${char.name}）啦！请选格子！`;
+      this.statusEmoji.textContent = char.symbol;
     }
   }
 

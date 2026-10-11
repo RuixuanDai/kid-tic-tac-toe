@@ -317,10 +317,10 @@ body {
 }
 
 .player-name {
-  font-size: 0.78rem;
+  font-size: 0.74rem;
   font-weight: 700;
   color: var(--text-muted);
-  max-width: 65px;
+  max-width: 85px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -656,9 +656,34 @@ body {
   animation: popScale 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
+.cell.cell-x {
+  background: #fff0f5 !important;
+  border-color: #ff6584 !important;
+  box-shadow: 0 6px 0 #fda4af !important;
+  color: #ff1464 !important;
+  font-weight: 700;
+}
+
+.cell.cell-o {
+  background: #f0f9ff !important;
+  border-color: #38bdf8 !important;
+  box-shadow: 0 6px 0 #7dd3fc !important;
+  color: #0284c7 !important;
+  font-weight: 700;
+}
+
+.cell.cell-x:active:not(:disabled) {
+  box-shadow: 0 2px 0 #fda4af !important;
+}
+
+.cell.cell-o:active:not(:disabled) {
+  box-shadow: 0 2px 0 #7dd3fc !important;
+}
+
 .cell.winning-cell {
   background: #fef08a !important;
   border-color: #f59e0b !important;
+  color: #b45309 !important;
   animation: winBounce 0.6s infinite alternate ease-in-out;
   box-shadow: 0 0 24px rgba(245, 158, 11, 0.7) !important;
 }
