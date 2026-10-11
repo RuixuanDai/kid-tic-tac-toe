@@ -20,7 +20,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=20261010-v8">
+  <link rel="stylesheet" href="style.css?v=20261010-v9">
 </head>
 <body>
   <!-- Floating Cheerful Background Elements -->
@@ -160,11 +160,17 @@
             </button>
           </div>
 
-          <!-- Bot Difficulty Selector -->
+          <!-- Bot Difficulty Selector with Dynamic Adaptation -->
           <div id="aiDifficultyRow" class="difficulty-row">
-            <span class="diff-label">小伙伴水平:</span>
+            <div class="diff-header">
+              <span class="diff-label">小伙伴战力水平:</span>
+              <span class="diff-dynamic-tag" id="dynamicLevelTag">✨ 动态进阶中</span>
+            </div>
             <div class="diff-buttons">
-              <button class="diff-btn active" data-diff="easy" title="贪玩小猴：轻松获胜，自信满满！">
+              <button class="diff-btn active" data-diff="auto" title="动态进阶：随连胜自动变强，输局贴心减难，越玩越聪明！">
+                ✨ 动态进阶 <span>(自适应)</span>
+              </button>
+              <button class="diff-btn" data-diff="easy" title="贪玩小猴：轻松获胜，自信满满！">
                 🐒 贪玩小猴 <span>(简单)</span>
               </button>
               <button class="diff-btn" data-diff="medium" title="机灵小狐：会防守，势均力敌！">
@@ -173,6 +179,10 @@
               <button class="diff-btn" data-diff="hard" title="智慧猫头鹰：智慧大师挑战！">
                 🦉 智慧猫头鹰 <span>(大师)</span>
               </button>
+            </div>
+            <div class="dynamic-status-bar" id="dynamicStatusBar">
+              <span class="dynamic-icon" id="dynamicTierIcon">🐒</span>
+              <span class="dynamic-hint" id="dynamicTierHint">当前状态：呆萌小猴陪练中，赢得本局将升级为机灵小狐！</span>
             </div>
           </div>
 
@@ -287,6 +297,6 @@
   <!-- Flying Star Animation Container -->
   <div id="starFlyContainer" class="star-fly-container"></div>
 
-  <script src="script.js?v=20261010-v8"></script>
+  <script src="script.js?v=20261010-v9"></script>
 </body>
 </html>

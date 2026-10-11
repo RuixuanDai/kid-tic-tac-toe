@@ -418,8 +418,8 @@ class TicTacToeGame {
     this.board = Array(9).fill(null);
     this.currentPlayer = 'X';
     this.gameActive = true;
-    this.gameMode = 'pvp';
-    this.aiDifficulty = 'easy';
+    this.gameMode = 'ai';
+    this.aiDifficulty = 'auto';
     this.currentThemeKey = 'pets';
     this.scores = { X: 0, O: 0, ties: 0 };
     this.isBotThinking = false;
@@ -436,6 +436,7 @@ class TicTacToeGame {
     this.updateThemeUI();
     this.updateTurnUI();
     this.updateRewardsUI();
+    this.updateDynamicDifficultyUI();
   }
 
   loadRewardsData() {
@@ -507,6 +508,10 @@ class TicTacToeGame {
     this.aiDifficultyRow = document.getElementById('aiDifficultyRow');
     this.pvpTipRow = document.getElementById('pvpTipRow');
     this.diffButtons = document.querySelectorAll('.diff-btn');
+    this.dynamicLevelTag = document.getElementById('dynamicLevelTag');
+    this.dynamicStatusBar = document.getElementById('dynamicStatusBar');
+    this.dynamicTierIcon = document.getElementById('dynamicTierIcon');
+    this.dynamicTierHint = document.getElementById('dynamicTierHint');
     this.soundToggleBtn = document.getElementById('soundToggleBtn');
     this.soundIcon = document.getElementById('soundIcon');
     this.soundText = document.getElementById('soundText');
@@ -666,6 +671,7 @@ class TicTacToeGame {
     if (mode === 'ai') {
       this.aiDifficultyRow.classList.remove('hidden');
       if (this.pvpTipRow) this.pvpTipRow.classList.add('hidden');
+      this.updateDynamicDifficultyUI();
       this.voice.speak('开启单人挑战，和电脑小伙伴下棋！', true);
     } else {
       this.aiDifficultyRow.classList.add('hidden');
@@ -682,9 +688,16 @@ class TicTacToeGame {
     this.diffButtons.forEach(btn => {
       btn.classList.toggle('active', btn.dataset.diff === diff);
     });
-    if (diff === 'easy') this.voice.speak('切换为贪玩小猴简单模式！', true);
-    if (diff === 'medium') this.voice.speak('切换为机灵小狐中等模式！', true);
-    if (diff === 'hard') this.voice.speak('挑战智慧猫头鹰大师模式！', true);
+    if (diff === 'auto') {
+      this.voice.speak('开启动态进阶模式，小伙伴会随你的连胜一起成长升级！', true);
+    } else if (diff === 'easy') {
+      this.voice.speak('已锁定为贪玩小猴简单模式！', true);
+    } else if (diff === 'medium') {
+      this.voice.speak('已锁定为机灵小狐中等模式！', true);
+    } else if (diff === 'hard') {
+      this.voice.speak('已挑战智慧猫头鹰大师模式！', true);
+    }
+    this.updateDynamicDifficultyUI();
     this.resetRound();
   }
 
@@ -781,6 +794,58 @@ class TicTacToeGame {
     }, 450);
   }
 
+  getEffectiveAiDifficulty() {
+    if (this.aiDifficulty !== 'auto') {
+      return this.aiDifficulty;
+    }
+    // Dynamic difficulty calculation based on current streak:
+    // streak 0: easy (Monkey) - gentle, lets child win easily
+    // streak 1: medium (Fox) - starts blocking lines, challenges child
+    // streak >= 2: hard (Owl) - master minimax play
+    if (this.streak >= 2) return 'hard';
+    if (this.streak === 1) return 'medium';
+    return 'easy';
+  }
+
+  updateDynamicDifficultyUI(showVoiceAnnouncement = false) {
+    if (!this.dynamicStatusBar || !this.dynamicTierIcon || !this.dynamicTierHint) return;
+
+    if (this.aiDifficulty === 'auto') {
+      const effective = this.getEffectiveAiDifficulty();
+      if (this.dynamicLevelTag) {
+        if (effective === 'hard') this.dynamicLevelTag.textContent = '🔥 战力: 大师';
+        else if (effective === 'medium') this.dynamicLevelTag.textContent = '⚡ 战力: 中等';
+        else this.dynamicLevelTag.textContent = '🌱 战力: 简单';
+      }
+
+      if (effective === 'hard') {
+        this.dynamicTierIcon.textContent = '🦉';
+        this.dynamicTierHint.textContent = `达成 ${this.streak} 连胜！大师猫头鹰使出全力，看谁能连成三颗！🔥`;
+        if (showVoiceAnnouncement) {
+          this.voice.speak('太厉害啦！连胜升级，猫头鹰使出大师全力啦！', true);
+        }
+      } else if (effective === 'medium') {
+        this.dynamicTierIcon.textContent = '🦊';
+        this.dynamicTierHint.textContent = `达成 1 连胜！小伙伴升级为机灵小狐，开始认真防守啦！`;
+        if (showVoiceAnnouncement) {
+          this.voice.speak('恭喜连胜！电脑升级为机灵小狐，开始认真动脑筋啦！', true);
+        }
+      } else {
+        this.dynamicTierIcon.textContent = '🐒';
+        this.dynamicTierHint.textContent = '当前为呆萌小猴陪练中，赢得本局将升级为机灵小狐！';
+        if (showVoiceAnnouncement && this.streak === 0) {
+          this.voice.speak('别灰心！电脑小伙伴放慢了脚步，再来一局赢回来！', true);
+        }
+      }
+    } else {
+      const names = { easy: '贪玩小猴 (简单)', medium: '机灵小狐 (中等)', hard: '智慧猫头鹰 (大师)' };
+      const icons = { easy: '🐒', medium: '🦊', hard: '🦉' };
+      if (this.dynamicLevelTag) this.dynamicLevelTag.textContent = '🔒 固定模式';
+      this.dynamicTierIcon.textContent = icons[this.aiDifficulty] || '🔒';
+      this.dynamicTierHint.textContent = `已锁定模式：${names[this.aiDifficulty] || ''}（不随战绩变动）`;
+    }
+  }
+
   calculateBestMove() {
     const available = this.board
       .map((val, idx) => (val === null ? idx : null))
@@ -788,8 +853,10 @@ class TicTacToeGame {
 
     if (available.length === 0) return -1;
 
+    const diff = this.getEffectiveAiDifficulty();
+
     // EASY: 85% silly moves, 15% smart move
-    if (this.aiDifficulty === 'easy') {
+    if (diff === 'easy') {
       if (Math.random() < 0.85) {
         return available[Math.floor(Math.random() * available.length)];
       }
@@ -809,12 +876,16 @@ class TicTacToeGame {
       const copy = [...this.board];
       copy[idx] = 'X';
       if (this.checkWin(copy, 'X')) {
+        // In medium mode, 85% chance to block, 15% slip
+        if (diff === 'medium' && Math.random() < 0.15) {
+          continue;
+        }
         return idx;
       }
     }
 
     // MEDIUM:
-    if (this.aiDifficulty === 'medium') {
+    if (diff === 'medium') {
       if (available.includes(4) && Math.random() > 0.3) return 4;
       return available[Math.floor(Math.random() * available.length)];
     }
@@ -903,17 +974,25 @@ class TicTacToeGame {
     if (this.gameMode === 'ai') {
       if (isP1) {
         // Player beats computer!
+        const prevDiff = this.getEffectiveAiDifficulty();
         this.totalWins++;
         this.streak++;
         if (this.streak > this.maxStreak) this.maxStreak = this.streak;
+        const newDiff = this.getEffectiveAiDifficulty();
+        const diffUpgraded = this.aiDifficulty === 'auto' && prevDiff !== newDiff;
 
         if (this.streak >= 2) {
           starsEarned += 2;
           bonusText = `连胜奖励！🔥 达成 ${this.streak} 连胜！`;
         }
 
+        if (diffUpgraded) {
+          const newName = newDiff === 'hard' ? '智慧猫头鹰 (大师)' : '机灵小狐 (中等)';
+          bonusText = `战力进阶！🔥 电脑小伙伴升级为【${newName}】！`;
+        }
+
         this.unlockBadge('bot_win');
-        if (this.aiDifficulty === 'hard') {
+        if (this.getEffectiveAiDifficulty() === 'hard') {
           this.unlockBadge('hard_bot');
         }
 
@@ -921,11 +1000,17 @@ class TicTacToeGame {
         this.checkBadges();
         this.saveRewardsData();
         this.updateRewardsUI();
+        this.updateDynamicDifficultyUI(false);
 
         this.sound.playWinFanfare();
         setTimeout(() => this.sound.playStarChime(), 400);
         this.confetti.burst(130);
-        this.voice.speak('太棒啦！你战胜了电脑小伙伴，奖励三颗星星！', true);
+        if (diffUpgraded) {
+          const newName = newDiff === 'hard' ? '智慧猫头鹰大师' : '机灵小狐';
+          this.voice.speak(`太棒啦！达成连胜，电脑小伙伴自动升级为${newName}啦！`, true);
+        } else {
+          this.voice.speak('太棒啦！你战胜了电脑小伙伴，奖励三颗星星！', true);
+        }
 
         this.statusEmoji.textContent = '🏆';
         this.statusText.textContent = `🎉 太棒啦！你战胜了电脑小伙伴！`;
@@ -943,17 +1028,29 @@ class TicTacToeGame {
 
       } else {
         // Computer wins!
+        const prevDiff = this.getEffectiveAiDifficulty();
         this.streak = 0;
         starsEarned = 1; // Encouragement reward
         bonusText = '努力挑战奖励！不要气馁哦！';
+        const newDiff = this.getEffectiveAiDifficulty();
+        const diffDowngraded = this.aiDifficulty === 'auto' && prevDiff !== newDiff;
+
+        if (diffDowngraded) {
+          bonusText = '贴心调整：小伙伴放慢了难度，马上赢回来！';
+        }
 
         this.stars += starsEarned;
         this.checkBadges();
         this.saveRewardsData();
         this.updateRewardsUI();
+        this.updateDynamicDifficultyUI(false);
 
         this.sound.playTieSound();
-        this.voice.speak('电脑小伙伴获胜啦！别灰心，马上赢回来吧！', true);
+        if (diffDowngraded) {
+          this.voice.speak('别灰心！电脑小伙伴放慢了脚步，再来一局赢回来吧！', true);
+        } else {
+          this.voice.speak('电脑小伙伴获胜啦！别灰心，马上赢回来吧！', true);
+        }
         this.statusEmoji.textContent = '🤖';
         this.statusText.textContent = `🤖 电脑（${this.theme.p2.name}）获胜！点击再来一局赢回来！`;
 
