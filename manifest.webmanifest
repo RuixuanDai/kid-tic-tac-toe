@@ -1,0 +1,40 @@
+{
+  "name": "儿童三子棋乐园 - Super Tic-Tac-Toe 智慧平板版",
+  "short_name": "儿童三子棋",
+  "description": "专为儿童与亲子家庭打造的益智三子棋平板乐园！支持经典三子棋与灵动满3消1模式、动态AI进阶、晓晓AI真人自然语音播报与星星扭蛋屋，手机与iPad离线全屏畅玩！",
+  "lang": "zh-CN",
+  "start_url": "./?source=pwa",
+  "scope": "./",
+  "display": "standalone",
+  "display_override": ["fullscreen", "standalone", "minimal-ui"],
+  "orientation": "any",
+  "background_color": "#FED8E5",
+  "theme_color": "#FF3366",
+  "categories": ["education", "kids", "games"],
+  "icons": [
+    {
+      "src": "icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}

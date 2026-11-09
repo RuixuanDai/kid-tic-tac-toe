@@ -3,14 +3,21 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>🌟 益智三子棋儿童平板乐园 🎮 | Super Tic-Tac-Toe Kids</title>
+  <title>🌟 益智三子棋儿童平板乐园 🎮 | Super Tic-Tac-Toe Kids PWA</title>
+  <meta name="description" content="专为儿童与亲子家庭打造的益智三子棋平板乐园！支持经典三子棋与灵动满3消1模式、动态AI进阶、晓晓AI真人自然语音播报与星星扭蛋屋，支持iPad离线全屏畅玩！">
   
   <!-- Tablet & PWA Web App Meta Tags -->
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="儿童三子棋">
   <meta name="mobile-web-app-capable" content="yes">
-  <meta name="theme-color" content="#fed6e3">
+  <meta name="theme-color" content="#ff3366">
+
+  <!-- PWA Manifest & Icons -->
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" type="image/svg+xml" href="icons/icon.svg">
+  <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon.png">
 
   <!-- Anti-cache meta headers -->
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
@@ -20,7 +27,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=20261011-v10">
+  <link rel="stylesheet" href="style.css?v=20261109-v12">
 </head>
 <body>
   <!-- Floating Cheerful Background Elements -->
@@ -41,25 +48,39 @@
     <!-- Top Header Bar -->
     <header class="app-header">
       <div class="header-left">
-        <span class="logo-emoji">🎈</span>
+        <img src="icons/icon.svg" alt="儿童三子棋" class="brand-app-icon" />
         <div class="logo-text">
-          <h1>儿童三子棋 <span class="sub-badge">平板乐园版 🎮</span></h1>
+          <h1>儿童三子棋 <span class="sub-badge">智慧乐园 PWA 🎮</span></h1>
         </div>
       </div>
 
-      <!-- Header Controls: Reward Jar, Sound Toggle, Settings Modal Trigger -->
+      <!-- Header Controls: Rule Mode Quick Switch, Reward Jar, Voice, Fullscreen, Settings -->
       <div class="header-right">
-        <button id="openRewardBtn" class="reward-pill-btn" aria-label="打开奖励宝箱" title="点击查看你的星星和成就勋章">
+        <!-- Quick Rule Mode Toggle: Classic vs Infinite 3-Piece -->
+        <div class="rule-quick-pill" id="ruleQuickSwitch" role="group" aria-label="玩法规则切换">
+          <button type="button" class="rule-pill-option active" data-rule="classic" title="经典三子棋：9格下满或连成3颗">
+            🎲 经典
+          </button>
+          <button type="button" class="rule-pill-option" data-rule="infinite" title="灵动三子棋：每人最多留3颗，下第4颗时最早的1颗消失，永不平局！">
+            ⚡ 满3消1
+          </button>
+        </div>
+
+        <button id="openRewardBtn" class="reward-pill-btn" aria-label="打开奖励宝箱与扭蛋屋" title="点击查看勋章与星星扭蛋屋">
           <span class="star-icon-bounce">⭐</span>
           <span class="star-count-badge" id="headerStarCount">0</span>
           <span class="reward-btn-label" id="rewardBtnLabel">去赢星星！🎁</span>
         </button>
 
-        <button id="soundToggleBtn" class="pill-btn sound-icon-btn" title="开关语音与音效" aria-label="开关语音与音效">
+        <button id="soundToggleBtn" class="pill-btn sound-icon-btn" title="开关AI真人语音与音效" aria-label="开关语音与音效">
           <span id="soundIcon">🔊</span>
         </button>
 
-        <button id="openSettingsBtn" class="pill-btn settings-header-btn" title="游戏设置（换角色/模式/难度）" aria-label="打开设置">
+        <button id="fullscreenBtn" class="pill-btn icon-circle-btn" title="切换全屏沉浸模式" aria-label="切换全屏">
+          <span id="fullscreenIcon">⛶</span>
+        </button>
+
+        <button id="openSettingsBtn" class="pill-btn settings-header-btn" title="游戏设置（换角色/音色/模式/难度）" aria-label="打开设置">
           <span>⚙️ 设置</span>
         </button>
       </div>
@@ -74,7 +95,10 @@
           <div class="reward-card-top">
             <div class="rank-avatar" id="playerRankAvatar">🌱</div>
             <div class="rank-details">
-              <div class="rank-title" id="playerRankTitle">棋艺小萌芽</div>
+              <div class="rank-title-row">
+                <span class="rank-title" id="playerRankTitle">棋艺小萌芽</span>
+                <span class="voice-tag-mini" id="activeVoiceBadge" title="当前AI真人语音角色">👩 晓晓</span>
+              </div>
               <div class="rank-sub" id="streakText">连胜 0 🔥</div>
             </div>
           </div>
@@ -117,7 +141,7 @@
           </div>
         </section>
 
-        <!-- Compact Match Info Card with One-Tap Settings -->
+        <!-- Compact Match Info Card with Smart Coach Hint & Settings -->
         <section class="match-info-card" id="matchInfoCard">
           <div class="match-info-top">
             <span class="match-info-icon" id="matchInfoIcon">🤖</span>
@@ -126,9 +150,14 @@
               <div class="match-info-desc" id="matchInfoDesc">随连胜动态进阶，越玩越聪明！</div>
             </div>
           </div>
-          <button id="quickSettingsBtn" class="pill-btn change-partner-btn" title="更换角色、游戏模式或战力">
-            <span>🎨 换角色 / 调整难度 ⚙️</span>
-          </button>
+          <div class="match-card-btn-row">
+            <button id="hintCoachBtn" class="pill-btn hint-coach-btn" title="让温柔姐姐晓晓教你下一步怎么走最优！">
+              <span>💡 聪明提示</span>
+            </button>
+            <button id="quickSettingsBtn" class="pill-btn change-partner-btn" title="更换角色、语音、模式或难度">
+              <span>🎨 换角色/设置</span>
+            </button>
+          </div>
         </section>
 
         <!-- Sidebar Actions -->
@@ -144,13 +173,16 @@
 
       <!-- RIGHT ARENA: Turn Banner, Enlarged Touch Board -->
       <main class="tablet-main-arena">
-        <!-- Turn Status Banner (Color synchronized with active player) -->
+        <!-- Turn Status Banner (Color synchronized with active player + Replay Voice button) -->
         <section class="status-banner turn-p1" id="statusBanner">
           <span class="status-icon" id="statusEmoji">🐶</span>
           <span class="status-text" id="statusText">轮到 你（小狗）下棋啦！请点击格子！</span>
+          <button id="replayVoiceBtn" class="banner-voice-btn" title="再听一遍语音提示" aria-label="播报提示">
+            📢
+          </button>
         </section>
 
-        <!-- 3x3 Toy Touch Board (Enlarged to 85%-90% Arena, ~480px, Ghost Previews) -->
+        <!-- 3x3 Toy Touch Board (Enlarged to 85%-90% Arena, ~480px, Ghost Previews + SVG Winning Laser) -->
         <div class="board-wrapper">
           <div class="board theme-pets" id="board" role="grid" aria-label="三子棋盘">
             <button class="cell" data-index="0" data-preview="🐶" role="gridcell" aria-label="第1行第1格"></button>
@@ -162,13 +194,25 @@
             <button class="cell" data-index="6" data-preview="🐶" role="gridcell" aria-label="第3行第1格"></button>
             <button class="cell" data-index="7" data-preview="🐶" role="gridcell" aria-label="第3行第2格"></button>
             <button class="cell" data-index="8" data-preview="🐶" role="gridcell" aria-label="第3行第3格"></button>
+
+            <!-- Dynamic Winning Laser Line Overlay -->
+            <svg class="win-line-svg" id="winLineSvg" viewBox="0 0 300 300" preserveAspectRatio="none" aria-hidden="true">
+              <defs>
+                <linearGradient id="winLaserGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stop-color="#ff2a6d" />
+                  <stop offset="50%" stop-color="#fde047" />
+                  <stop offset="100%" stop-color="#10b981" />
+                </linearGradient>
+              </defs>
+              <line id="winLaserLine" class="win-laser-line" x1="0" y1="0" x2="0" y2="0" />
+            </svg>
           </div>
         </div>
       </main>
     </div>
   </div>
 
-  <!-- Settings Drawer / Modal (Mode, Difficulty, 4+3 Themes Grid) -->
+  <!-- Settings Drawer / Modal (Mode, Rule, Difficulty, AI Voice, 4+3 Themes Grid, PWA Install) -->
   <div class="modal-backdrop hidden" id="settingsModal">
     <div class="modal-card settings-modal-card">
       <div class="settings-modal-header">
@@ -179,9 +223,9 @@
         <button id="closeSettingsModalBtn" class="close-icon-btn" aria-label="关闭">✖</button>
       </div>
 
-      <!-- Section 1: Game Mode Switcher -->
+      <!-- Section 1: Game Mode & Rule Variant -->
       <div class="settings-section">
-        <h3 class="section-title">🎮 选择对战模式</h3>
+        <h3 class="section-title">🎮 选择对战模式与规则</h3>
         <div class="mode-toggles-settings">
           <button id="modeAiBtn" class="mode-btn-large active" data-mode="ai">
             <span class="mode-emoji">🤖</span>
@@ -190,6 +234,17 @@
           <button id="modePvPBtn" class="mode-btn-large" data-mode="pvp">
             <span class="mode-emoji">👥</span>
             <span class="mode-text">亲子双人同屏对战</span>
+          </button>
+        </div>
+
+        <div class="rule-toggles-settings" style="margin-top: 6px;">
+          <button type="button" class="rule-card-btn active" data-rule="classic">
+            <span class="rule-card-title">🎲 经典三子棋</span>
+            <span class="rule-card-desc">传统9格对决，适合启蒙入门</span>
+          </button>
+          <button type="button" class="rule-card-btn" data-rule="infinite">
+            <span class="rule-card-title">⚡ 灵动三子棋（满3消1）</span>
+            <span class="rule-card-desc">每人最多留3子，下第4子消第1子，绝不平局！</span>
           </button>
         </div>
       </div>
@@ -228,7 +283,18 @@
         </div>
       </div>
 
-      <!-- Section 3: Themes (Balanced 4+3 Grid, Classic ❌ vs ⭕) -->
+      <!-- Section 3: AI Neural Natural Voice Selection -->
+      <div class="settings-section">
+        <div class="diff-title-row">
+          <h3 class="section-title">🗣️ AI 真人自然语音播报</h3>
+          <button type="button" id="testVoiceBtn" class="mini-pill-btn">🎵 试听当前声音</button>
+        </div>
+        <div class="voice-grid-settings" id="voiceChipsGrid">
+          <!-- Populated dynamically from TTS_VOICE_OPTIONS -->
+        </div>
+      </div>
+
+      <!-- Section 4: Themes (Balanced 4+3 Grid, Classic ❌ vs ⭕) -->
       <div class="settings-section">
         <h3 class="section-title">🎨 挑选喜欢的萌宠角色搭档</h3>
         <div class="themes-grid-settings" id="themeChips">
@@ -266,7 +332,17 @@
         </div>
       </div>
 
-      <div class="modal-buttons" style="margin-top: 14px;">
+      <!-- Section 5: Tablet & PWA Tools -->
+      <div class="settings-tools-row">
+        <button type="button" id="pwaInstallBtn" class="tool-pill-btn">
+          📲 添加到主屏幕（满屏畅玩）
+        </button>
+        <button type="button" id="firstTurnToggleBtn" class="tool-pill-btn">
+          🔄 先手规则：<span id="firstTurnLabel">轮流先手</span>
+        </button>
+      </div>
+
+      <div class="modal-buttons" style="margin-top: 12px;">
         <button id="settingsDoneBtn" class="modal-btn main-btn">
           🌟 保存并开始下棋！
         </button>
@@ -279,7 +355,7 @@
     <div class="modal-card confirm-modal-card">
       <div class="modal-decoration">🧹</div>
       <h2 class="modal-title" style="color: #475569;">确定要把比分清零吗？</h2>
-      <p class="modal-subtitle">清空后比分将重新计分，不会扣除你已经收集的星星和勋章哦！</p>
+      <p class="modal-subtitle">清空后比分将重新计分，不会扣除你已经收集的星星、勋章和扭蛋萌宠哦！</p>
       <div class="modal-buttons">
         <button id="cancelResetBtn" class="modal-btn main-btn">
           🎮 继续下棋（不清除）
@@ -312,13 +388,13 @@
     </div>
   </div>
 
-  <!-- Reward & Sticker Album Modal (荣誉勋章馆) -->
+  <!-- Reward, Gashapon & Sticker Album Modal (荣誉勋章馆 + 星星扭蛋屋) -->
   <div class="modal-backdrop hidden" id="rewardModal">
     <div class="modal-card reward-modal-card">
       <div class="reward-modal-header">
         <div class="header-title-box">
           <span class="trophy-big">🏆</span>
-          <h2>我的奖励勋章馆</h2>
+          <h2>我的奖励与扭蛋乐园</h2>
         </div>
         <button id="closeRewardModalBtn" class="close-icon-btn" aria-label="关闭">✖</button>
       </div>
@@ -327,7 +403,7 @@
       <div class="reward-stats-banner">
         <div class="stat-item">
           <div class="stat-val" id="rewardModalStars">0</div>
-          <div class="stat-name">⭐ 累计星星</div>
+          <div class="stat-name">⭐ 可用星星</div>
         </div>
         <div class="stat-item">
           <div class="stat-val" id="rewardModalWins">0</div>
@@ -335,21 +411,82 @@
         </div>
         <div class="stat-item">
           <div class="stat-val" id="rewardModalBadgesCount">0 / 8</div>
-          <div class="stat-name">🎖️ 已解锁勋章</div>
+          <div class="stat-name">🎖️ 荣誉勋章</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-val" id="rewardModalStickersCount">0 / 12</div>
+          <div class="stat-name">🎰 扭蛋萌宠</div>
         </div>
       </div>
 
-      <!-- Badges Album Grid (Click to hear voice!) -->
-      <div class="badges-scroll-area">
-        <div class="badges-tip-banner">💡 点击任意勋章可以收听语音介绍哦！</div>
-        <div class="badges-grid" id="badgesGrid">
+      <!-- Reward Modal Tabs -->
+      <div class="reward-tabs">
+        <button type="button" class="reward-tab-btn active" data-reward-tab="gashapon">
+          🎰 星星扭蛋屋
+        </button>
+        <button type="button" class="reward-tab-btn" data-reward-tab="badges">
+          🎖️ 荣誉勋章馆
+        </button>
+      </div>
+
+      <!-- Tab 1: Gashapon Machine & Pet Sticker Collection -->
+      <div class="reward-tab-panel" id="tabPanelGashapon">
+        <div class="gashapon-stage-box">
+          <div class="gashapon-machine-visual" id="gashaponVisual">
+            <div class="gashapon-ORB" id="gashaponOrb">🔮</div>
+            <div class="gashapon-msg" id="gashaponMsg">每集齐 5 颗 ⭐ 就能抽一次神秘萌宠伙伴！（不影响棋艺段位）</div>
+          </div>
+          <button type="button" id="drawGashaponBtn" class="pill-btn gashapon-draw-btn">
+            🎰 花 5 颗 ⭐ 扭一次盲盒！
+          </button>
+        </div>
+        <div class="badges-tip-banner" style="margin-top: 8px;">👇 已收集的萌宠伙伴（点击萌宠听晓晓姐姐讲故事！）</div>
+        <div class="stickers-grid" id="stickersGrid">
           <!-- Populated dynamically by script.js -->
+        </div>
+      </div>
+
+      <!-- Tab 2: Badges Album Grid (Click to hear voice!) -->
+      <div class="reward-tab-panel hidden" id="tabPanelBadges">
+        <div class="badges-scroll-area">
+          <div class="badges-tip-banner">💡 点击任意勋章可以收听 AI 真人语音介绍哦！</div>
+          <div class="badges-grid" id="badgesGrid">
+            <!-- Populated dynamically by script.js -->
+          </div>
         </div>
       </div>
 
       <div class="modal-buttons" style="margin-top: 14px;">
         <button id="rewardCloseActionBtn" class="modal-btn main-btn">
-          ✨ 继续挑战收集更多星星！
+          ✨ 继续下棋赢更多星星！
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- iPad / Tablet Add to Home Screen Guide Modal -->
+  <div class="modal-backdrop hidden" id="pwaGuideModal">
+    <div class="modal-card confirm-modal-card" style="max-width: 500px;">
+      <div class="modal-decoration">📲</div>
+      <h2 class="modal-title" style="color: #0284c7;">添加到主屏幕 · 满屏畅玩</h2>
+      <p class="modal-subtitle">只需 3 步，像原生 App 一样全屏玩三子棋，断网也能离线畅玩！</p>
+      <div class="pwa-steps-list">
+        <div class="pwa-step-item">
+          <span class="pwa-step-num">1</span>
+          <span>在 iPad / 手机浏览器中打开本页面</span>
+        </div>
+        <div class="pwa-step-item">
+          <span class="pwa-step-num">2</span>
+          <span>点击浏览器顶部或底部的 <strong>「分享 📤」</strong> 或菜单按钮</span>
+        </div>
+        <div class="pwa-step-item">
+          <span class="pwa-step-num">3</span>
+          <span>选择 <strong>「添加到主屏幕 ➕」</strong> 即可在桌面生成图标！</span>
+        </div>
+      </div>
+      <div class="modal-buttons" style="margin-top: 16px;">
+        <button id="closePwaGuideBtn" class="modal-btn main-btn">
+          🌟 我学会啦！
         </button>
       </div>
     </div>
@@ -358,6 +495,16 @@
   <!-- Flying Star Animation Container -->
   <div id="starFlyContainer" class="star-fly-container"></div>
 
-  <script src="script.js?v=20261011-v10"></script>
+  <!-- Load Natural Offline TTS + Online AI Neural TTS + Game Engine -->
+  <script src="lib/web-natural-tts.js?v=20261109-v12"></script>
+  <script src="lib/web-online-tts.js?v=20261109-v12"></script>
+  <script src="script.js?v=20261109-v12"></script>
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', function () {
+        navigator.serviceWorker.register('./sw.js').catch(function () {});
+      });
+    }
+  </script>
 </body>
 </html>

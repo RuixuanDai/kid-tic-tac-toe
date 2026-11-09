@@ -1,0 +1,6 @@
+.agents
+.git
+.wrangler
+.playwright-cli
+.local-data
+README.md

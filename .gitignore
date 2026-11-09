@@ -1,6 +1,15 @@
+# Node / Wrangler / Local Data
+node_modules/
+dist/
+.wrangler/
+.local-data/
+.env
+.env.*
+
 # System & IDE
 .DS_Store
 Thumbs.db
 desktop.ini
 .vscode/
 .idea/
+.playwright-cli/
