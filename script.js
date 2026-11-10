@@ -1476,11 +1476,11 @@ class TicTacToeGame {
     this.avatarOEl.textContent = t.p2.symbol;
 
     if (this.gameMode === 'ai') {
-      this.namePlayerXEl.textContent = `你 (${t.p1.name})`;
-      this.namePlayerOEl.textContent = `电脑 (${t.p2.name})`;
+      this.namePlayerXEl.textContent = `你·${t.p1.name}`;
+      this.namePlayerOEl.textContent = `电脑·${t.p2.name}`;
     } else {
-      this.namePlayerXEl.textContent = `玩家1 (${t.p1.name})`;
-      this.namePlayerOEl.textContent = `玩家2 (${t.p2.name})`;
+      this.namePlayerXEl.textContent = `玩家1·${t.p1.name}`;
+      this.namePlayerOEl.textContent = `玩家2·${t.p2.name}`;
     }
 
     this.updateMatchInfoUI();
@@ -2341,16 +2341,24 @@ class TicTacToeGame {
     });
 
     this.statusBanner.className = 'status-banner';
+    const diffNames = { easy: '贪玩小猴', medium: '机灵小狐', hard: '猫头鹰' };
+    const effective = this.getEffectiveAiDifficulty();
 
     if (this.gameMode === 'ai') {
       if (isP1) {
         this.statusBanner.classList.add('turn-p1');
         this.statusText.textContent = `轮到 你（${char.name}）下棋啦！请点击格子！`;
         this.statusEmoji.textContent = char.symbol;
+        if (this.matchInfoTitle) {
+          this.matchInfoTitle.textContent = `${diffNames[effective]} · 轮到你（${char.name}）`;
+        }
       } else {
         this.statusBanner.classList.add('bot-thinking');
         this.statusText.textContent = `电脑（${char.name}）正在动脑筋思考中...`;
         this.statusEmoji.textContent = '🤔';
+        if (this.matchInfoTitle) {
+          this.matchInfoTitle.textContent = `${diffNames[effective]} · 电脑思考中...`;
+        }
       }
     } else {
       if (isP1) {
@@ -2358,9 +2366,12 @@ class TicTacToeGame {
       } else {
         this.statusBanner.classList.add('turn-p2');
       }
-      const pLabel = isP1 ? '玩家 1' : '玩家 2';
+      const pLabel = isP1 ? '玩家1' : '玩家2';
       this.statusText.textContent = `轮到 ${pLabel}（${char.name}）啦！请选格子！`;
       this.statusEmoji.textContent = char.symbol;
+      if (this.matchInfoTitle) {
+        this.matchInfoTitle.textContent = `双人对战 · 轮到${pLabel}（${char.name}）`;
+      }
     }
   }
 
