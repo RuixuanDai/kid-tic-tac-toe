@@ -337,14 +337,12 @@ class VoiceAnnouncer {
       if (!this.prewarmed) {
         this.prewarmed = true;
         this.onlineTts.prewarm([
-          '好棋！电脑下好啦，该你啦！',
-          '太棒啦！你战胜了电脑小伙伴，奖励三颗星星！',
-          '势均力敌！你和电脑打成平手啦！',
-          '电脑小伙伴获胜啦！别灰心，马上赢回来吧！',
-          '新的一局开始，请你先下棋！',
-          '新的一局开始，电脑先下好啦，轮到你啦！',
-          '快看闪光格！下在这里就能直接连成三颗获胜啦！',
-          '小心哦！对手快连成三颗了，快点闪光的位置堵住它！'
+          '耶！你赢啦！',
+          '太棒啦！连胜升级！',
+          '差一点，再来一局！',
+          '平局啦！',
+          '走闪光格就能赢！',
+          '快堵住闪光格！'
         ]);
       }
     } else if (this.naturalTts && typeof this.naturalTts.unlock === 'function') {
@@ -1206,7 +1204,6 @@ class TicTacToeGame {
         const idx = order.indexOf(this.firstTurnMode);
         this.firstTurnMode = order[(idx + 1) % order.length];
         this.firstTurnLabel.textContent = labels[this.firstTurnMode];
-        this.voice.speak(`先手规则已设为${labels[this.firstTurnMode]}！`, true);
       });
     }
 
@@ -1273,7 +1270,6 @@ class TicTacToeGame {
     this.settingsDoneBtn.addEventListener('click', () => {
       this.sound.playClick();
       this.closeSettingsModal();
-      this.voice.speak('设置好啦，开始下棋！', true);
     });
 
     this.settingsModal.addEventListener('click', (e) => {
@@ -1309,7 +1305,6 @@ class TicTacToeGame {
       this.sound.playClick();
       this.confirmResetModal.classList.add('hidden');
       this.resetScores();
-      this.voice.speak('比分已清零，开始新的对局！', true);
     });
 
     // Win Modal
@@ -1394,7 +1389,6 @@ class TicTacToeGame {
       this.applyScreenModeBodyClass();
       this.fitViewportScale(false);
       this.showToast('🗔 已锁定为「非全屏模式」，不会再自动跳回全屏！');
-      this.voice.speak('已锁定为非全屏模式！', true);
     } else {
       // Explicitly enter Fullscreen mode
       this.applyScreenModeBodyClass();
@@ -1403,7 +1397,6 @@ class TicTacToeGame {
         requestFullScreen.call(docEl).catch(() => {});
       }
       this.showToast('⛶ 已开启「全屏模式」');
-      this.voice.speak('已开启全屏模式！', true);
     }
   }
 
@@ -1448,18 +1441,11 @@ class TicTacToeGame {
 
     this.updateMatchInfoUI();
     this.resetRound(true);
-
-    if (this.ruleMode === 'infinite') {
-      this.voice.speak('开启满三消一灵动模式！每人最多保留三颗棋子，下第四颗时最早的一颗会消失，永不平局哦！', true);
-    } else {
-      this.voice.speak('切换为经典三子棋模式！', true);
-    }
   }
 
   openSettingsModal() {
     this.applyScreenModeBodyClass();
     this.settingsModal.classList.remove('hidden');
-    this.voice.speak('进入游戏设置，挑选你喜欢的角色、语音和玩法！', true);
   }
 
   closeSettingsModal() {
@@ -1482,7 +1468,6 @@ class TicTacToeGame {
     this.updateThemeUI();
     this.updateBoardSymbols();
     this.updateTurnUI();
-    this.voice.speak(`换成${this.theme.name}主题啦！`, true);
   }
 
   updateThemeUI() {
@@ -1551,10 +1536,8 @@ class TicTacToeGame {
     if (mode === 'ai') {
       this.aiDifficultySection.style.display = 'flex';
       this.updateDynamicDifficultyUI();
-      this.voice.speak('开启单人挑战，和电脑小伙伴下棋！', true);
     } else {
       this.aiDifficultySection.style.display = 'none';
-      this.voice.speak('开启双人对战，和小伙伴一起下棋！', true);
     }
 
     this.updateThemeUI();
@@ -1566,15 +1549,6 @@ class TicTacToeGame {
     this.diffButtons.forEach((btn) => {
       btn.classList.toggle('active', btn.dataset.diff === diff);
     });
-    if (diff === 'auto') {
-      this.voice.speak('开启动态进阶模式，小伙伴会随你的连胜一起成长升级！', true);
-    } else if (diff === 'easy') {
-      this.voice.speak('已锁定为贪玩小猴简单模式！', true);
-    } else if (diff === 'medium') {
-      this.voice.speak('已锁定为机灵小狐中等模式！', true);
-    } else if (diff === 'hard') {
-      this.voice.speak('已挑战猫头鹰大师模式！', true);
-    }
     this.updateDynamicDifficultyUI();
     this.resetRound(true);
   }
@@ -1598,7 +1572,7 @@ class TicTacToeGame {
     if (nextState) {
       this.sound.init();
       this.sound.playClick();
-      this.voice.speak('AI真人语音与音效已开启！', true);
+      this.voice.speak('语音已开启', true);
     }
   }
 
@@ -1623,7 +1597,7 @@ class TicTacToeGame {
       const simBoard = this.simulateBoardAfterMove(this.board, player, idx);
       if (this.checkWin(simBoard, player)) {
         this.highlightCoachCell(idx);
-        this.voice.speak('快看闪光格！下在这里就能直接连成三颗获胜啦！', true);
+        this.voice.speak('走闪光格就能赢！', true);
         return;
       }
     }
@@ -1633,7 +1607,7 @@ class TicTacToeGame {
       const simBoard = this.simulateBoardAfterMove(this.board, opponent, idx);
       if (this.checkWin(simBoard, opponent)) {
         this.highlightCoachCell(idx);
-        this.voice.speak('小心哦！对手快连成三颗了，快点闪光的位置堵住它！', true);
+        this.voice.speak('快堵住闪光格！', true);
         return;
       }
     }
@@ -1641,7 +1615,7 @@ class TicTacToeGame {
     // 3. Center cell if available
     if (available.includes(4)) {
       this.highlightCoachCell(4);
-      this.voice.speak('占领正中间的黄金格，四面八方都更容易连成线哦！', true);
+      this.voice.speak('占中间最有利！', true);
       return;
     }
 
@@ -1649,7 +1623,7 @@ class TicTacToeGame {
     const corners = [0, 2, 6, 8].filter((c) => available.includes(c));
     const bestIdx = corners.length > 0 ? corners[0] : available[0];
     this.highlightCoachCell(bestIdx);
-    this.voice.speak('试试闪光的角落格，悄悄布下双面夹击阵法吧！', true);
+    this.voice.speak('试试走角落格！', true);
   }
 
   highlightCoachCell(idx) {
@@ -1722,24 +1696,6 @@ class TicTacToeGame {
     this.currentPlayer = this.currentPlayer === 'X' ? 'O' : 'X';
     this.updateFadingPieceMarkers();
     this.updateTurnUI();
-
-    if (options.silent) return;
-
-    // Non-overlapping narration for moves:
-    // In AI mode, when player X places a piece and the game continues, the bot moves ~500ms later.
-    // Do NOT start a separate speech on X's half-turn so it never overlaps with the bot's move speech!
-    if (this.gameMode === 'ai') {
-      if (player === 'O') {
-        if (options.isOpeningBotMove) {
-          this.voice.speak('新的一局开始，电脑先下好啦，轮到你啦！');
-        } else {
-          this.voice.speak('好棋！电脑下好啦，该你啦！');
-        }
-      }
-    } else {
-      const nextP = this.currentPlayer === 'X' ? '玩家1' : '玩家2';
-      this.voice.speak(`轮到${nextP}啦！`);
-    }
   }
 
   clearFadingMarkers() {
@@ -2031,10 +1987,9 @@ class TicTacToeGame {
         setTimeout(() => this.sound.playStarChime(), 400);
         this.confetti.burst(130);
         if (diffUpgraded) {
-          const newName = newDiff === 'hard' ? '猫头鹰大师' : '机灵小狐';
-          this.voice.speak(`太棒啦！达成连胜，电脑小伙伴自动升级为${newName}啦！`, true);
+          this.voice.speak('太棒啦！连胜升级！', true);
         } else {
-          this.voice.speak('太棒啦！你战胜了电脑小伙伴，奖励三颗星星！', true);
+          this.voice.speak('耶！你赢啦！', true);
         }
 
         this.statusEmoji.textContent = '🏆';
@@ -2070,11 +2025,7 @@ class TicTacToeGame {
         this.updateDynamicDifficultyUI(false);
 
         this.sound.playTieSound();
-        if (diffDowngraded) {
-          this.voice.speak('别灰心！电脑小伙伴放慢了脚步，再来一局赢回来吧！', true);
-        } else {
-          this.voice.speak('电脑小伙伴获胜啦！别灰心，马上赢回来吧！', true);
-        }
+        this.voice.speak('差一点，再来一局！', true);
         this.statusEmoji.textContent = '🤖';
         this.statusText.textContent = `🤖 电脑（${this.theme.p2.name}）获胜！点击再来一局赢回来！`;
 
@@ -2117,7 +2068,7 @@ class TicTacToeGame {
       this.confetti.burst(120);
 
       const pLabel = isP1 ? '玩家 1' : '玩家 2';
-      this.voice.speak(`恭喜${pLabel}获胜！连成三颗一排！`, true);
+      this.voice.speak(`${pLabel}赢啦！`, true);
       this.statusEmoji.textContent = '🏆';
       this.statusText.textContent = `🎉 恭喜！${pLabel}（${winnerChar.name}）获胜！`;
 
@@ -2149,7 +2100,7 @@ class TicTacToeGame {
     this.statusEmoji.textContent = '🤝';
 
     if (this.gameMode === 'ai') {
-      this.voice.speak('势均力敌！你和电脑打成平手啦！', true);
+      this.voice.speak('平局啦！', true);
       this.statusText.textContent = '🤝 你和电脑打成平手！棋逢对手！';
       setTimeout(() => {
         this.modalEmoji.textContent = '🤝';
@@ -2160,7 +2111,7 @@ class TicTacToeGame {
         this.resultModal.classList.remove('hidden');
       }, 600);
     } else {
-      this.voice.speak('势均力敌，打成平手啦！', true);
+      this.voice.speak('平局啦！', true);
       this.statusText.textContent = '🤝 两位小朋友打成平手！棋逢对手！';
       setTimeout(() => {
         this.modalEmoji.textContent = '🤝';
@@ -2265,7 +2216,6 @@ class TicTacToeGame {
   }
 
   openRewardModal() {
-    this.voice.speak('欢迎来到奖励与扭蛋乐园！', true);
     this.renderRewardModalContents();
     this.rewardModal.classList.remove('hidden');
   }
@@ -2364,7 +2314,7 @@ class TicTacToeGame {
       this.gashaponMsg.textContent = `🎉 恭喜扭出新伙伴：【${prize.name}】！`;
       this.sound.playWinFanfare();
       this.confetti.burst(80);
-      this.voice.speak(`哇！恭喜你扭出了${prize.name}！${prize.story}`, true);
+      this.voice.speak(`哇！抽到了${prize.name}！`, true);
 
       this.renderRewardModalContents();
     }, 680);
@@ -2452,16 +2402,6 @@ class TicTacToeGame {
 
     if (this.gameMode === 'ai' && this.currentPlayer === 'O') {
       this.triggerBotMove({ isOpeningBotMove: true, silent: isSilent });
-      return;
-    }
-
-    if (!isSilent) {
-      if (this.gameMode === 'ai') {
-        this.voice.speak('新的一局开始，请你先下棋！', true);
-      } else {
-        const starterLabel = this.currentPlayer === 'X' ? '玩家1' : '玩家2';
-        this.voice.speak(`新的一局开始，${starterLabel}请下棋！`, true);
-      }
     }
   }
 
