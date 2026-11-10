@@ -27,7 +27,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=20261109-v13">
+  <link rel="stylesheet" href="style.css?v=20261109-v14">
   <script>
     // 最早阶段捕获浏览器原生 PWA 一步安装事件，确保不错过触发时机，并立即注册 Service Worker
     window.__deferredPwaPrompt = null;
@@ -95,11 +95,7 @@
             <span id="soundIcon">🔊</span>
           </button>
 
-          <button id="fullscreenBtn" class="pill-btn icon-circle-btn" title="切换全屏沉浸模式" aria-label="切换全屏">
-            <span id="fullscreenIcon">⛶</span>
-          </button>
-
-          <button id="openSettingsBtn" class="pill-btn settings-header-btn" title="游戏设置（换角色/音色/模式/难度）" aria-label="打开设置">
+          <button id="openSettingsBtn" class="pill-btn settings-header-btn" title="游戏设置（换角色/音色/模式/难度/全屏/更新）" aria-label="打开设置">
             <span>⚙️</span>
             <span class="settings-btn-label">设置</span>
           </button>
@@ -353,14 +349,23 @@
         </div>
       </div>
 
-      <!-- Section 5: Tablet & PWA Tools -->
-      <div class="settings-tools-row">
-        <button type="button" id="pwaInstallBtn" class="tool-pill-btn">
-          📲 添加到主屏幕（满屏畅玩）
-        </button>
-        <button type="button" id="firstTurnToggleBtn" class="tool-pill-btn">
-          🔄 先手规则：<span id="firstTurnLabel">轮流先手</span>
-        </button>
+      <!-- Section 5: System, Fullscreen, Update & PWA Tools -->
+      <div class="settings-section">
+        <h3 class="section-title">🛠️ 应用工具与规则选项</h3>
+        <div class="settings-tools-row">
+          <button type="button" id="pwaInstallBtn" class="tool-pill-btn">
+            📲 添加到桌面 App
+          </button>
+          <button type="button" id="fullscreenBtn" class="tool-pill-btn">
+            <span id="fullscreenIcon">⛶</span> <span id="fullscreenLabel">进入全屏模式</span>
+          </button>
+          <button type="button" id="updateAppBtn" class="tool-pill-btn update-tool-btn">
+            🚀 检查更新（加载最新版）
+          </button>
+          <button type="button" id="firstTurnToggleBtn" class="tool-pill-btn">
+            🔄 先手规则：<span id="firstTurnLabel">我方先手</span>
+          </button>
+        </div>
       </div>
 
       <div class="modal-buttons" style="margin-top: 12px;">
@@ -520,8 +525,8 @@
   <div id="starFlyContainer" class="star-fly-container"></div>
 
   <!-- Load Natural Offline TTS + Online AI Neural TTS + Game Engine -->
-  <script src="lib/web-natural-tts.js?v=20261109-v13"></script>
-  <script src="lib/web-online-tts.js?v=20261109-v13"></script>
-  <script src="script.js?v=20261109-v13"></script>
+  <script src="lib/web-natural-tts.js?v=20261109-v14"></script>
+  <script src="lib/web-online-tts.js?v=20261109-v14"></script>
+  <script src="script.js?v=20261109-v14"></script>
 </body>
 </html>

@@ -608,11 +608,9 @@ class TicTacToeGame {
     this.rankProgressBar = document.getElementById('rankProgressBar');
     this.rankProgressLabel = document.getElementById('rankProgressLabel');
 
-    // Header Sound, Fullscreen & Settings
+    // Header Sound & Settings
     this.soundToggleBtn = document.getElementById('soundToggleBtn');
     this.soundIcon = document.getElementById('soundIcon');
-    this.fullscreenBtn = document.getElementById('fullscreenBtn');
-    this.fullscreenIcon = document.getElementById('fullscreenIcon');
     this.openSettingsBtn = document.getElementById('openSettingsBtn');
 
     // Scoreboard
@@ -654,6 +652,10 @@ class TicTacToeGame {
     this.testVoiceBtn = document.getElementById('testVoiceBtn');
     this.themeChips = document.querySelectorAll('.theme-card-btn');
     this.pwaInstallBtn = document.getElementById('pwaInstallBtn');
+    this.fullscreenBtn = document.getElementById('fullscreenBtn');
+    this.fullscreenIcon = document.getElementById('fullscreenIcon');
+    this.fullscreenLabel = document.getElementById('fullscreenLabel');
+    this.updateAppBtn = document.getElementById('updateAppBtn');
     this.firstTurnToggleBtn = document.getElementById('firstTurnToggleBtn');
     this.firstTurnLabel = document.getElementById('firstTurnLabel');
 
@@ -699,56 +701,24 @@ class TicTacToeGame {
   }
 
   initViewportAutoScale() {
-    const updateScale = () => {
-      this.fitViewportScale();
-    };
-
-    updateScale();
-    requestAnimationFrame(updateScale);
-    setTimeout(updateScale, 150);
-
-    if (document.fonts && document.fonts.ready) {
-      document.fonts.ready.then(updateScale).catch(() => {});
-    }
-
-    window.addEventListener('resize', updateScale);
-    window.addEventListener('orientationchange', () => {
-      setTimeout(updateScale, 80);
-      setTimeout(updateScale, 260);
-    });
-
-    if (window.visualViewport) {
-      window.visualViewport.addEventListener('resize', updateScale);
+    // Pure CSS 100dvh flex/grid auto-sizing handles all screen ratios natively without transform resize loops
+    if (this.layoutContainer) {
+      this.layoutContainer.style.transform = '';
     }
   }
 
   fitViewportScale() {
-    const container = this.layoutContainer;
-    if (!container) return;
-
-    const vv = window.visualViewport;
-    const vpW = vv ? vv.width : window.innerWidth;
-    const vpH = vv ? vv.height : window.innerHeight;
-
-    const padX = vpW < 560 ? 10 : 18;
-    const padY = vpH < 680 ? 10 : 18;
-    const availW = Math.max(240, vpW - padX);
-    const availH = Math.max(300, vpH - padY);
-
-    const natW = container.offsetWidth || 1;
-    const natH = container.offsetHeight || 1;
-
-    const scaleX = availW / natW;
-    const scaleY = availH / natH;
-    const scale = Math.min(scaleX, scaleY, 1.15);
-
-    container.style.transform = `scale(${scale.toFixed(4)})`;
+    // No-op: layout fits 100dvh natively via CSS without mutating transform on resize
   }
 
   isStandaloneMode() {
     return Boolean(
-      (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) ||
-      window.navigator.standalone === true
+      (window.matchMedia &&
+        (window.matchMedia('(display-mode: standalone)').matches ||
+          window.matchMedia('(display-mode: fullscreen)').matches ||
+          window.matchMedia('(display-mode: minimal-ui)').matches)) ||
+      window.navigator.standalone === true ||
+      window.location.search.includes('source=pwa')
     );
   }
 
@@ -1065,11 +1035,50 @@ class TicTacToeGame {
     // Sound toggle
     this.soundToggleBtn.addEventListener('click', () => this.toggleSound());
 
-    // Fullscreen toggle
+    // Fullscreen toggle (inside Settings Modal)
     if (this.fullscreenBtn) {
       this.fullscreenBtn.addEventListener('click', () => {
         this.sound.playClick();
         this.toggleFullscreen();
+      });
+    }
+
+    const syncFsUI = () => {
+      const doc = window.document;
+      const isFs = Boolean(
+        doc.fullscreenElement ||
+          doc.mozFullScreenElement ||
+          doc.webkitFullscreenElement ||
+          doc.msFullscreenElement
+      );
+      if (this.fullscreenLabel) {
+        this.fullscreenLabel.textContent = isFs ? '退出全屏模式' : '进入全屏模式';
+      }
+    };
+    document.addEventListener('fullscreenchange', syncFsUI);
+    document.addEventListener('webkitfullscreenchange', syncFsUI);
+
+    // Force Update / Clear Cache Button in Settings
+    if (this.updateAppBtn) {
+      this.updateAppBtn.addEventListener('click', async () => {
+        this.sound.playWinFanfare();
+        this.updateAppBtn.textContent = '⏳ 正在清理缓存并更新...';
+        this.updateAppBtn.disabled = true;
+        this.showToast('🚀 正在为您清理旧缓存并获取最新版本...');
+        try {
+          if ('caches' in window) {
+            const keys = await caches.keys();
+            await Promise.all(keys.map((k) => caches.delete(k)));
+          }
+          if ('serviceWorker' in navigator) {
+            const regs = await navigator.serviceWorker.getRegistrations();
+            await Promise.all(regs.map((r) => r.update().catch(() => {})));
+          }
+        } catch (_) {}
+        setTimeout(() => {
+          const freshUrl = window.location.origin + window.location.pathname + '?v=' + Date.now();
+          window.location.replace(freshUrl);
+        }, 280);
       });
     }
 
@@ -1266,7 +1275,11 @@ class TicTacToeGame {
       !doc.msFullscreenElement
     ) {
       if (requestFullScreen) {
-        requestFullScreen.call(docEl).catch(() => {});
+        requestFullScreen.call(docEl).catch(() => {
+          this.showToast('💡 当前环境无需手动全屏，或请使用「安装到桌面 App」全屏畅玩！');
+        });
+      } else {
+        this.showToast('💡 请点击「添加到桌面 App」开启原生全屏模式！');
       }
     } else if (cancelFullScreen) {
       cancelFullScreen.call(doc).catch(() => {});

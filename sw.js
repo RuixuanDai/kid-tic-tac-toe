@@ -1,5 +1,5 @@
 // 儿童三子棋乐园 - PWA Service Worker (Network-First 实时热更新 + 断网离线畅玩兜底)
-const CACHE_NAME = 'kid-ttt-pwa-v20261109-v13';
+const CACHE_NAME = 'kid-ttt-pwa-v20261109-v14';
 const CORE_ASSETS = [
   './',
   './index.html',
