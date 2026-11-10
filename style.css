@@ -43,18 +43,36 @@
   touch-action: manipulation; /* Instant touch response without double-tap delay */
 }
 
+html,
+body {
+  width: 100%;
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
+  overscroll-behavior: none;
+  position: fixed;
+  inset: 0;
+}
+
 body {
   font-family: var(--font-family);
   background: var(--bg-gradient);
-  min-height: 100vh;
-  min-height: 100dvh;
+  color: var(--text-dark);
+  box-sizing: border-box;
+}
+
+/* Fixed Fullscreen Auto-Scaling Stage (Zero Scroll on Foldable / Mobile / Tablet) */
+.viewport-stage {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
   display: flex;
   justify-content: center;
   align-items: center;
-  color: var(--text-dark);
-  overflow-x: hidden;
-  position: relative;
-  padding: env(safe-area-inset-top, 12px) env(safe-area-inset-right, 16px) env(safe-area-inset-bottom, 12px) env(safe-area-inset-left, 16px);
+  overflow: hidden;
+  z-index: 10;
+  padding: env(safe-area-inset-top, 6px) env(safe-area-inset-right, 8px) env(safe-area-inset-bottom, 6px) env(safe-area-inset-left, 8px);
   box-sizing: border-box;
 }
 
@@ -97,21 +115,23 @@ body {
 
 /* Tablet Layout Outer Container */
 .tablet-layout-container {
-  width: min(98%, 1080px);
-  max-width: 1080px;
+  width: 1020px;
+  max-width: none;
+  flex-shrink: 0;
   background: var(--card-bg);
   backdrop-filter: blur(14px);
   border-radius: 34px;
   box-shadow: var(--card-shadow);
-  padding: 16px 24px 22px 24px;
+  padding: 16px 24px 20px 24px;
   border: 4px solid #ffffff;
   display: flex;
   flex-direction: column;
   gap: 14px;
   position: relative;
   z-index: 10;
-  margin: auto;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  margin: 0;
+  transform-origin: center center;
+  will-change: transform;
 }
 
 /* Top App Header (Streamlined single-line layout) */
@@ -295,7 +315,27 @@ body {
   box-shadow: 0 4px 0 #fca5a5;
 }
 
-/* Settings Button in Header */
+/* Settings & Install App Buttons in Header */
+.header-install-pwa-btn {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: #ffffff;
+  border: 2px solid #34d399;
+  padding: 7px 13px;
+  font-size: 0.92rem;
+  border-radius: 999px;
+  box-shadow: 0 4px 0 #047857, 0 4px 10px rgba(16, 185, 129, 0.25);
+}
+
+.header-install-pwa-btn:hover {
+  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+  transform: translateY(-1px);
+}
+
+.header-install-pwa-btn:active {
+  transform: translateY(3px);
+  box-shadow: 0 1px 0 #047857;
+}
+
 .settings-header-btn {
   background: #eff6ff;
   color: #1d4ed8;
@@ -315,27 +355,12 @@ body {
   box-shadow: 0 1px 0 #93c5fd;
 }
 
-/* Tablet Dual-Column Grid */
+/* Tablet & Unfolded Foldable Dual-Column Grid */
 .tablet-grid-layout {
   display: grid;
-  grid-template-columns: 1fr;
-  gap: 18px;
-}
-
-@media (min-width: 768px) and (max-width: 879px) {
-  .tablet-grid-layout {
-    grid-template-columns: 320px 1fr;
-    gap: 18px;
-    align-items: center;
-  }
-}
-
-@media (min-width: 880px) {
-  .tablet-grid-layout {
-    grid-template-columns: 350px 1fr;
-    gap: 24px;
-    align-items: center;
-  }
+  grid-template-columns: 340px 1fr;
+  gap: 22px;
+  align-items: center;
 }
 
 /* Left Sidebar */
@@ -782,8 +807,8 @@ body {
   grid-template-columns: repeat(3, 1fr);
   grid-template-rows: repeat(3, 1fr);
   gap: 14px;
-  width: min(100%, 480px);
-  height: min(480px, 80vw);
+  width: 460px;
+  height: 460px;
   aspect-ratio: 1 / 1;
   padding: 14px;
   border-radius: 30px;
@@ -1780,38 +1805,150 @@ body {
   line-height: 1.25;
 }
 
-/* PWA Guide Steps */
-.pwa-steps-list {
+/* 1-Step PWA Install Reminder Modal (Auto-Pop on Web Page Open) */
+.pwa-install-modal-card {
+  max-width: 440px;
+  padding: 24px 22px 20px 22px;
+  border-color: #10b981;
+  position: relative;
+  text-align: center;
+}
+
+.pwa-close-floating {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+}
+
+.pwa-modal-app-badge {
   display: flex;
-  flex-direction: column;
-  gap: 10px;
+  align-items: center;
+  gap: 14px;
+  background: linear-gradient(135deg, #f0fdf4 0%, #ecfeff 100%);
+  border: 2px solid #a7f3d0;
+  border-radius: 22px;
+  padding: 14px;
+  margin-bottom: 14px;
   text-align: left;
 }
 
-.pwa-step-item {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  background: #f0f9ff;
-  border: 2px solid #bae6fd;
+.pwa-modal-app-icon {
+  width: 64px;
+  height: 64px;
   border-radius: 16px;
-  padding: 10px 14px;
-  font-size: 0.96rem;
-  font-weight: 600;
-  color: #0369a1;
+  box-shadow: 0 6px 14px rgba(255, 51, 102, 0.22);
+  flex-shrink: 0;
 }
 
-.pwa-step-num {
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  background: #0284c7;
+.pwa-modal-app-meta {
+  min-width: 0;
+}
+
+.pwa-modal-title {
+  font-size: 1.38rem;
+  font-weight: 700;
+  color: #065f46;
+  margin-bottom: 4px;
+}
+
+.pwa-modal-subtitle {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: #047857;
+  line-height: 1.35;
+}
+
+.pwa-modal-perks {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.pwa-perk-pill {
+  background: #fef3c7;
+  color: #92400e;
+  border: 1.5px solid #fcd34d;
+  border-radius: 999px;
+  padding: 4px 11px;
+  font-size: 0.84rem;
+  font-weight: 700;
+}
+
+.pwa-modal-status-tip {
+  background: #f0f9ff;
+  border: 2px dashed #7dd3fc;
+  border-radius: 16px;
+  padding: 10px 12px;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: #0369a1;
+  line-height: 1.45;
+  margin-bottom: 14px;
+  text-align: left;
+}
+
+.pwa-modal-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.pwa-install-primary-btn {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: #ffffff;
+  font-size: 1.15rem;
+  padding: 13px 20px;
+  box-shadow: 0 6px 0 #047857, 0 8px 18px rgba(16, 185, 129, 0.3);
+}
+
+.pwa-install-primary-btn:hover {
+  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+}
+
+.pwa-install-primary-btn:active {
+  transform: translateY(4px);
+  box-shadow: 0 2px 0 #047857;
+}
+
+.pwa-install-later-btn {
+  font-family: var(--font-family);
+  background: transparent;
+  border: none;
+  color: #64748b;
+  font-size: 0.92rem;
+  font-weight: 700;
+  padding: 6px 10px;
+  cursor: pointer;
+}
+
+.pwa-install-later-btn:hover {
+  color: #334155;
+  text-decoration: underline;
+}
+
+/* Global Lightweight Toast */
+.app-toast {
+  position: fixed;
+  bottom: 22px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(15, 23, 42, 0.92);
   color: #ffffff;
   font-weight: 700;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
+  font-size: 0.96rem;
+  padding: 10px 20px;
+  border-radius: 999px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+  z-index: 3500;
+  pointer-events: none;
+  transition: opacity 0.25s ease, transform 0.25s ease;
+}
+
+.app-toast.hidden {
+  opacity: 0;
+  transform: translate(-50%, 12px);
 }
 
 /* Flying Star Animation */
@@ -1896,34 +2033,291 @@ body {
   100% { transform: scale(1); opacity: 1; }
 }
 
-/* Mobile & Small Screen Tweaks */
-@media (max-width: 767px) {
-  body {
-    padding: 8px;
-    align-items: flex-start;
-  }
+/* =========================================================
+   Tier 2: Unfolded Foldable Phones (Inner Screen ~600-879px) & Compact Tablets
+   Side-by-Side 2-Column Layout so Square Screens Never Overflow Vertically!
+   ========================================================= */
+@media (min-width: 560px) and (max-width: 879px) {
   .tablet-layout-container {
-    padding: 14px 12px 18px 12px;
-    border-radius: 26px;
-    gap: 12px;
+    width: 720px;
+    padding: 12px 16px 14px 16px;
+    border-radius: 28px;
+    gap: 10px;
+  }
+  .app-header {
+    padding-bottom: 8px;
+    gap: 6px;
+  }
+  .brand-app-icon {
+    width: 36px;
+    height: 36px;
   }
   .logo-text h1 {
-    font-size: 1.4rem;
+    font-size: 1.42rem;
   }
-  .board {
-    width: min(100%, 340px);
-    height: 340px;
-    gap: 10px;
-    padding: 10px;
-    border-radius: 24px;
-  }
-  .cell {
-    font-size: 2.8rem;
-    border-radius: 18px;
+  .sub-badge {
+    display: none;
   }
   .reward-btn-label {
     display: none;
   }
+  .tablet-grid-layout {
+    grid-template-columns: 276px 1fr;
+    gap: 14px;
+    align-items: center;
+  }
+  .tablet-sidebar {
+    gap: 9px;
+  }
+  .reward-summary-card {
+    padding: 9px 11px;
+    border-radius: 18px;
+  }
+  .rank-avatar {
+    font-size: 1.85rem;
+  }
+  .rank-title {
+    font-size: 1rem;
+  }
+  .score-card {
+    padding: 6px 5px;
+    border-radius: 14px;
+  }
+  .avatar-badge {
+    font-size: 1.5rem;
+  }
+  .score-number {
+    font-size: 1.55rem;
+  }
+  .match-info-card {
+    padding: 9px 11px;
+    gap: 7px;
+    border-radius: 16px;
+  }
+  .match-info-icon {
+    font-size: 1.7rem;
+  }
+  .match-info-title {
+    font-size: 0.94rem;
+  }
+  .match-info-desc {
+    font-size: 0.8rem;
+  }
+  .primary-action-btn,
+  .secondary-action-btn {
+    padding: 10px 10px;
+    font-size: 0.94rem;
+  }
+  .tablet-main-arena {
+    gap: 9px;
+  }
+  .status-banner {
+    padding: 8px 12px;
+    font-size: 1rem;
+    border-radius: 16px;
+  }
+  .board {
+    width: 376px;
+    height: 376px;
+    gap: 10px;
+    padding: 11px;
+    border-radius: 24px;
+  }
+  .cell {
+    font-size: 3.1rem;
+    border-radius: 18px;
+  }
+}
+
+/* =========================================================
+   Tier 3: Folded Foldable Phones (Cover Screen) & Portrait Smartphones (<560px)
+   Compact Single-Screen Layout + Dynamic JS Auto-Scaling (Zero Scrolling!)
+   ========================================================= */
+@media (max-width: 559px) {
+  .tablet-layout-container {
+    width: 380px;
+    padding: 10px 12px 12px 12px;
+    border-radius: 24px;
+    gap: 7px;
+  }
+  .app-header {
+    padding-bottom: 6px;
+    gap: 6px;
+  }
+  .brand-app-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 9px;
+  }
+  .logo-text h1 {
+    font-size: 1.2rem;
+  }
+  .sub-badge,
+  .reward-btn-label,
+  .settings-btn-label {
+    display: none;
+  }
+  .rule-pill-option {
+    font-size: 0.78rem;
+    padding: 4px 8px;
+  }
+  .reward-pill-btn {
+    padding: 5px 9px;
+    font-size: 0.84rem;
+    gap: 4px;
+  }
+  .header-install-pwa-btn {
+    padding: 5px 9px;
+    font-size: 0.8rem;
+  }
+  .sound-icon-btn,
+  .icon-circle-btn,
+  .settings-header-btn {
+    width: 34px;
+    height: 34px;
+    padding: 0;
+    font-size: 1.1rem;
+    border-radius: 50%;
+  }
+
+  /* Flatten sidebar children so Board sits prominently in the middle of the screen */
+  .tablet-grid-layout {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+  }
+  .tablet-sidebar {
+    display: contents;
+  }
+
+  /* 1. Scoreboard at Top */
+  .scoreboard {
+    order: 1;
+    gap: 6px;
+  }
+  .score-card {
+    padding: 5px 6px;
+    border-radius: 14px;
+    border-width: 2px;
+  }
+  .avatar-badge {
+    font-size: 1.45rem;
+  }
+  .player-name {
+    font-size: 0.74rem;
+  }
+  .score-number {
+    font-size: 1.4rem;
+  }
+
+  /* 2. Turn Status + Big 3x3 Board in Center */
+  .tablet-main-arena {
+    order: 2;
+    gap: 6px;
+  }
+  .status-banner {
+    padding: 6px 10px;
+    font-size: 0.92rem;
+    border-radius: 14px;
+    border-width: 2px;
+    gap: 6px;
+  }
+  .status-icon {
+    font-size: 1.35rem;
+  }
+  .banner-voice-btn {
+    width: 30px;
+    height: 30px;
+    font-size: 0.95rem;
+  }
+  .board {
+    width: 316px;
+    height: 316px;
+    gap: 9px;
+    padding: 9px;
+    border-radius: 22px;
+  }
+  .cell {
+    font-size: 2.7rem;
+    border-radius: 16px;
+  }
+
+  /* 3. Coach Hint & Quick Settings Bar */
+  .match-info-card {
+    order: 3;
+    padding: 7px 9px;
+    gap: 6px;
+    border-radius: 15px;
+  }
+  .match-info-top {
+    gap: 7px;
+  }
+  .match-info-icon {
+    font-size: 1.35rem;
+    padding: 2px;
+    border-radius: 10px;
+  }
+  .match-info-text-group {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    gap: 6px;
+  }
+  .match-info-title {
+    font-size: 0.86rem;
+  }
+  .match-info-desc {
+    display: none;
+  }
+  .hint-coach-btn,
+  .change-partner-btn {
+    padding: 7px 8px;
+    font-size: 0.86rem;
+    border-radius: 11px;
+  }
+
+  /* 4. New Round & Clear Score Buttons */
+  .sidebar-actions {
+    order: 4;
+    gap: 7px;
+  }
+  .primary-action-btn,
+  .secondary-action-btn {
+    padding: 9px 10px;
+    font-size: 0.92rem;
+  }
+
+  /* 5. Compact Rank & Progress Strip at Bottom */
+  .reward-summary-card {
+    order: 5;
+    padding: 6px 10px;
+    border-radius: 14px;
+  }
+  .reward-card-top {
+    margin-bottom: 4px;
+    gap: 7px;
+  }
+  .rank-avatar {
+    font-size: 1.45rem;
+    padding: 2px;
+    border-radius: 10px;
+  }
+  .rank-title {
+    font-size: 0.88rem;
+  }
+  .rank-sub {
+    font-size: 0.78rem;
+  }
+  .progress-bar-container {
+    height: 9px;
+    margin-bottom: 2px;
+  }
+  .progress-label {
+    font-size: 0.74rem;
+  }
+
+  /* Modal tweaks for narrow screens */
   .themes-grid-settings,
   .voice-grid-settings,
   .stickers-grid {

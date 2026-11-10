@@ -337,14 +337,14 @@ class VoiceAnnouncer {
       if (!this.prewarmed) {
         this.prewarmed = true;
         this.onlineTts.prewarm([
-          '好棋！轮到电脑动脑筋啦！',
-          '电脑下好啦，该你啦！',
+          '好棋！电脑下好啦，该你啦！',
           '太棒啦！你战胜了电脑小伙伴，奖励三颗星星！',
           '势均力敌！你和电脑打成平手啦！',
           '电脑小伙伴获胜啦！别灰心，马上赢回来吧！',
           '新的一局开始，请你先下棋！',
-          '快看闪光格！下在这里就能连成三颗获胜啦！',
-          '小心哦！对手快连成三颗了，快堵住闪光的位置！'
+          '新的一局开始，电脑先下好啦，轮到你啦！',
+          '快看闪光格！下在这里就能直接连成三颗获胜啦！',
+          '小心哦！对手快连成三颗了，快点闪光的位置堵住它！'
         ]);
       }
     } else if (this.naturalTts && typeof this.naturalTts.unlock === 'function') {
@@ -516,7 +516,10 @@ class TicTacToeGame {
     this.currentThemeKey = 'pets';
     this.scores = { X: 0, O: 0, ties: 0 };
     this.isBotThinking = false;
+    this.botMoveTimer = null;
     this.deferredInstallPrompt = null;
+    this._pwaAutoPromptShown = false;
+    this._toastTimer = null;
 
     // Load persistent reward data
     this.loadRewardsData();
@@ -534,6 +537,8 @@ class TicTacToeGame {
     this.updateTurnUI();
     this.updateRewardsUI();
     this.updateDynamicDifficultyUI();
+    this.initViewportAutoScale();
+    this.initPWA();
   }
 
   loadRewardsData() {
@@ -581,6 +586,7 @@ class TicTacToeGame {
   }
 
   cacheDOMElements() {
+    this.layoutContainer = document.getElementById('layoutContainer') || document.querySelector('.tablet-layout-container');
     this.cells = document.querySelectorAll('.cell');
     this.boardEl = document.getElementById('board');
     this.winLaserLine = document.getElementById('winLaserLine');
@@ -594,6 +600,7 @@ class TicTacToeGame {
     this.headerStarCount = document.getElementById('headerStarCount');
     this.rewardBtnLabel = document.getElementById('rewardBtnLabel');
     this.openRewardBtn = document.getElementById('openRewardBtn');
+    this.headerInstallPwaBtn = document.getElementById('headerInstallPwaBtn');
     this.playerRankAvatar = document.getElementById('playerRankAvatar');
     this.playerRankTitle = document.getElementById('playerRankTitle');
     this.activeVoiceBadge = document.getElementById('activeVoiceBadge');
@@ -682,9 +689,248 @@ class TicTacToeGame {
     this.badgesGrid = document.getElementById('badgesGrid');
     this.starFlyContainer = document.getElementById('starFlyContainer');
 
-    // PWA Guide Modal
-    this.pwaGuideModal = document.getElementById('pwaGuideModal');
-    this.closePwaGuideBtn = document.getElementById('closePwaGuideBtn');
+    // PWA 1-Step Install Reminder Modal & Toast
+    this.pwaInstallModal = document.getElementById('pwaInstallModal');
+    this.closePwaModalBtn = document.getElementById('closePwaModalBtn');
+    this.pwaModalStatusTip = document.getElementById('pwaModalStatusTip');
+    this.pwaModalInstallBtn = document.getElementById('pwaModalInstallBtn');
+    this.pwaModalDismissBtn = document.getElementById('pwaModalDismissBtn');
+    this.appToast = document.getElementById('appToast');
+  }
+
+  initViewportAutoScale() {
+    const updateScale = () => {
+      this.fitViewportScale();
+    };
+
+    updateScale();
+    requestAnimationFrame(updateScale);
+    setTimeout(updateScale, 150);
+
+    if (document.fonts && document.fonts.ready) {
+      document.fonts.ready.then(updateScale).catch(() => {});
+    }
+
+    window.addEventListener('resize', updateScale);
+    window.addEventListener('orientationchange', () => {
+      setTimeout(updateScale, 80);
+      setTimeout(updateScale, 260);
+    });
+
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener('resize', updateScale);
+    }
+  }
+
+  fitViewportScale() {
+    const container = this.layoutContainer;
+    if (!container) return;
+
+    const vv = window.visualViewport;
+    const vpW = vv ? vv.width : window.innerWidth;
+    const vpH = vv ? vv.height : window.innerHeight;
+
+    const padX = vpW < 560 ? 10 : 18;
+    const padY = vpH < 680 ? 10 : 18;
+    const availW = Math.max(240, vpW - padX);
+    const availH = Math.max(300, vpH - padY);
+
+    const natW = container.offsetWidth || 1;
+    const natH = container.offsetHeight || 1;
+
+    const scaleX = availW / natW;
+    const scaleY = availH / natH;
+    const scale = Math.min(scaleX, scaleY, 1.15);
+
+    container.style.transform = `scale(${scale.toFixed(4)})`;
+  }
+
+  isStandaloneMode() {
+    return Boolean(
+      (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) ||
+      window.navigator.standalone === true
+    );
+  }
+
+  isIOSDevice() {
+    const ua = navigator.userAgent || '';
+    if (/iPad|iPhone|iPod/i.test(ua)) return true;
+    if (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1) return true;
+    return false;
+  }
+
+  showToast(message, durationMs = 2800) {
+    if (!this.appToast) return;
+    this.appToast.textContent = message;
+    this.appToast.classList.remove('hidden');
+    if (this._toastTimer) clearTimeout(this._toastTimer);
+    this._toastTimer = setTimeout(() => {
+      this.appToast.classList.add('hidden');
+    }, durationMs);
+  }
+
+  syncPwaModalUI(showFallbackTip = false) {
+    if (!this.pwaModalStatusTip || !this.pwaModalInstallBtn) return;
+
+    const hasNativePrompt = Boolean(this.deferredInstallPrompt || window.__deferredPwaPrompt);
+    if (hasNativePrompt) {
+      this.pwaModalStatusTip.hidden = false;
+      this.pwaModalStatusTip.innerHTML = '🚀 <strong>已就绪：</strong>点击下方绿色按钮，即可<strong>一步添加</strong>到手机或平板桌面全屏畅玩！';
+      this.pwaModalInstallBtn.innerHTML = '<span>📲 一步安装到桌面</span>';
+      return;
+    }
+
+    if (this.isIOSDevice()) {
+      this.pwaModalStatusTip.hidden = false;
+      this.pwaModalStatusTip.innerHTML =
+        '🍎 <strong>iPhone / iPad 快捷安装：</strong>点击浏览器栏的 <strong>【⎋ 分享】</strong> ➔ 选择 <strong>【➕ 添加到主屏幕】</strong>，即可生成全屏 App！';
+      this.pwaModalInstallBtn.innerHTML = '<span>👌 我知道了，去试试</span>';
+      return;
+    }
+
+    if (showFallbackTip) {
+      this.pwaModalStatusTip.hidden = false;
+      this.pwaModalStatusTip.innerHTML =
+        '💡 若浏览器未直接弹出安装框，说明桌面可能已安装，或请点浏览器右上角/底部 <strong>【⋮ 菜单】➔【安装应用 / 添加到主屏幕】</strong> 即可一步完成！';
+      this.pwaModalInstallBtn.innerHTML = '<span>📲 再试一次一步安装</span>';
+    } else {
+      this.pwaModalStatusTip.hidden = false;
+      this.pwaModalStatusTip.innerHTML =
+        '✨ <strong>推荐添加到桌面：</strong>全屏自动缩放免滚动，无浏览器地址栏干扰，断网也能离线玩！';
+      this.pwaModalInstallBtn.innerHTML = '<span>📲 一步安装到桌面</span>';
+    }
+  }
+
+  openPwaInstallModal(showFallbackTip = false) {
+    if (this.isStandaloneMode() || !this.pwaInstallModal) return;
+    this.syncPwaModalUI(showFallbackTip);
+    this.pwaInstallModal.classList.remove('hidden');
+  }
+
+  dismissPwaInstallModal() {
+    if (this.pwaInstallModal) {
+      this.pwaInstallModal.classList.add('hidden');
+    }
+    try {
+      sessionStorage.setItem('ttt_pwa_prompt_dismissed', 'true');
+    } catch (_) {}
+  }
+
+  async triggerPWAInstall(fromModal = false) {
+    if (this.isStandaloneMode()) {
+      this.showToast('✅ 当前已经在桌面独立 App 模式下全屏运行啦！');
+      return;
+    }
+
+    this.closeSettingsModal();
+
+    let promptEvt = this.deferredInstallPrompt || window.__deferredPwaPrompt;
+
+    // Wait briefly up to 450ms in case Service Worker just finished registering
+    if (!promptEvt && !this.isIOSDevice()) {
+      for (let i = 0; i < 5; i++) {
+        await new Promise((r) => setTimeout(r, 90));
+        promptEvt = this.deferredInstallPrompt || window.__deferredPwaPrompt;
+        if (promptEvt) break;
+      }
+    }
+
+    if (promptEvt) {
+      try {
+        promptEvt.prompt();
+        const { outcome } = await promptEvt.userChoice;
+        this.deferredInstallPrompt = null;
+        window.__deferredPwaPrompt = null;
+        if (outcome === 'accepted') {
+          this.dismissPwaInstallModal();
+          this.showToast('🎉 已成功将「儿童三子棋」安装到桌面！');
+        }
+      } catch (err) {
+        console.warn('PWA install prompt error:', err);
+      }
+      return;
+    }
+
+    if (fromModal && this.isIOSDevice()) {
+      this.dismissPwaInstallModal();
+      return;
+    }
+
+    this.openPwaInstallModal(true);
+  }
+
+  initPWA() {
+    if (window.__deferredPwaPrompt) {
+      this.deferredInstallPrompt = window.__deferredPwaPrompt;
+    }
+
+    const markInstalled = () => {
+      if (this.headerInstallPwaBtn) {
+        this.headerInstallPwaBtn.style.display = 'none';
+      }
+      if (this.pwaInstallBtn) {
+        this.pwaInstallBtn.textContent = '✅ 已安装为桌面全屏 App';
+        this.pwaInstallBtn.disabled = true;
+      }
+      if (this.pwaInstallModal) {
+        this.pwaInstallModal.classList.add('hidden');
+      }
+    };
+
+    if (this.isStandaloneMode()) {
+      markInstalled();
+      return;
+    }
+
+    const onPromptCaptured = (e) => {
+      if (e && typeof e.preventDefault === 'function') {
+        e.preventDefault();
+        this.deferredInstallPrompt = e;
+        window.__deferredPwaPrompt = e;
+      } else if (window.__deferredPwaPrompt) {
+        this.deferredInstallPrompt = window.__deferredPwaPrompt;
+      }
+
+      this.syncPwaModalUI(false);
+
+      if (!this.isStandaloneMode() && !this._pwaAutoPromptShown) {
+        let dismissed = false;
+        try {
+          dismissed = sessionStorage.getItem('ttt_pwa_prompt_dismissed') === 'true';
+        } catch (_) {}
+        if (!dismissed) {
+          this._pwaAutoPromptShown = true;
+          this.openPwaInstallModal(false);
+        }
+      }
+    };
+
+    window.addEventListener('beforeinstallprompt', onPromptCaptured);
+    window.addEventListener('pwa-prompt-ready', () => onPromptCaptured(null));
+
+    if (this.deferredInstallPrompt) {
+      onPromptCaptured(null);
+    } else {
+      // Automatically show the 1-step PWA install reminder when opening the web page
+      setTimeout(() => {
+        if (this.isStandaloneMode() || this._pwaAutoPromptShown) return;
+        let dismissed = false;
+        try {
+          dismissed = sessionStorage.getItem('ttt_pwa_prompt_dismissed') === 'true';
+        } catch (_) {}
+        if (!dismissed) {
+          this._pwaAutoPromptShown = true;
+          this.openPwaInstallModal(false);
+        }
+      }, 450);
+    }
+
+    window.addEventListener('appinstalled', () => {
+      this.deferredInstallPrompt = null;
+      window.__deferredPwaPrompt = null;
+      markInstalled();
+      this.showToast('🎉 已成功安装「儿童三子棋」到桌面！');
+    });
   }
 
   renderVoiceOptionsGrid() {
@@ -844,31 +1090,47 @@ class TicTacToeGame {
       });
     }
 
-    // PWA Install Prompt
-    window.addEventListener('beforeinstallprompt', (e) => {
-      e.preventDefault();
-      this.deferredInstallPrompt = e;
-    });
-
-    if (this.pwaInstallBtn) {
-      this.pwaInstallBtn.addEventListener('click', async () => {
+    // PWA 1-Step Install Triggers (Header Button, Settings Button, Auto Modal)
+    if (this.headerInstallPwaBtn) {
+      this.headerInstallPwaBtn.addEventListener('click', () => {
         this.sound.playClick();
-        if (this.deferredInstallPrompt) {
-          this.deferredInstallPrompt.prompt();
-          await this.deferredInstallPrompt.userChoice.catch(() => {});
-          this.deferredInstallPrompt = null;
-        } else {
-          this.closeSettingsModal();
-          this.pwaGuideModal.classList.remove('hidden');
-          this.voice.speak('按照屏幕上的三步提示，就能把三子棋装到平板桌面满屏玩啦！', true);
-        }
+        this.triggerPWAInstall(false);
       });
     }
 
-    if (this.closePwaGuideBtn) {
-      this.closePwaGuideBtn.addEventListener('click', () => {
+    if (this.pwaInstallBtn) {
+      this.pwaInstallBtn.addEventListener('click', () => {
         this.sound.playClick();
-        this.pwaGuideModal.classList.add('hidden');
+        this.triggerPWAInstall(false);
+      });
+    }
+
+    if (this.pwaModalInstallBtn) {
+      this.pwaModalInstallBtn.addEventListener('click', () => {
+        this.sound.playClick();
+        this.triggerPWAInstall(true);
+      });
+    }
+
+    if (this.pwaModalDismissBtn) {
+      this.pwaModalDismissBtn.addEventListener('click', () => {
+        this.sound.playClick();
+        this.dismissPwaInstallModal();
+      });
+    }
+
+    if (this.closePwaModalBtn) {
+      this.closePwaModalBtn.addEventListener('click', () => {
+        this.sound.playClick();
+        this.dismissPwaInstallModal();
+      });
+    }
+
+    if (this.pwaInstallModal) {
+      this.pwaInstallModal.addEventListener('click', (e) => {
+        if (e.target === this.pwaInstallModal) {
+          this.dismissPwaInstallModal();
+        }
       });
     }
 
@@ -1258,7 +1520,7 @@ class TicTacToeGame {
     }
   }
 
-  makeMove(index, player) {
+  makeMove(index, player, options = {}) {
     this.clearCoachHints();
 
     // Infinite 3-Piece Mode: If player already has 3 pieces on board, vanish the oldest one!
@@ -1298,12 +1560,18 @@ class TicTacToeGame {
     this.updateFadingPieceMarkers();
     this.updateTurnUI();
 
-    // Friendly narration for moves
+    if (options.silent) return;
+
+    // Non-overlapping narration for moves:
+    // In AI mode, when player X places a piece and the game continues, the bot moves ~500ms later.
+    // Do NOT start a separate speech on X's half-turn so it never overlaps with the bot's move speech!
     if (this.gameMode === 'ai') {
-      if (player === 'X') {
-        this.voice.speak('好棋！轮到电脑动脑筋啦！');
-      } else {
-        this.voice.speak('电脑下好啦，该你啦！');
+      if (player === 'O') {
+        if (options.isOpeningBotMove) {
+          this.voice.speak('新的一局开始，电脑先下好啦，轮到你啦！');
+        } else {
+          this.voice.speak('好棋！电脑下好啦，该你啦！');
+        }
       }
     } else {
       const nextP = this.currentPlayer === 'X' ? '玩家1' : '玩家2';
@@ -1330,14 +1598,19 @@ class TicTacToeGame {
     });
   }
 
-  triggerBotMove() {
+  triggerBotMove(options = {}) {
+    if (this.botMoveTimer) {
+      clearTimeout(this.botMoveTimer);
+      this.botMoveTimer = null;
+    }
     this.isBotThinking = true;
     const botName = this.theme.p2.name;
     this.statusBanner.className = 'status-banner bot-thinking';
     this.statusEmoji.textContent = '🤔';
     this.statusText.textContent = `${botName} 正在动脑筋思考中...`;
 
-    setTimeout(() => {
+    this.botMoveTimer = setTimeout(() => {
+      this.botMoveTimer = null;
       if (!this.gameActive) {
         this.isBotThinking = false;
         return;
@@ -1347,9 +1620,9 @@ class TicTacToeGame {
       this.isBotThinking = false;
 
       if (botIndex !== -1 && botIndex !== undefined) {
-        this.makeMove(botIndex, 'O');
+        this.makeMove(botIndex, 'O', options);
       }
-    }, 480);
+    }, 520);
   }
 
   getEffectiveAiDifficulty() {
@@ -1751,12 +2024,6 @@ class TicTacToeGame {
     if (!this.unlockedBadges.includes(badgeId)) {
       this.unlockedBadges.push(badgeId);
       this.saveRewardsData();
-      const badgeObj = BADGES_CONFIG.find((b) => b.id === badgeId);
-      if (badgeObj) {
-        setTimeout(() => {
-          this.voice.speak(`恭喜解锁荣誉勋章：${badgeObj.title}！`);
-        }, 1800);
-      }
     }
   }
 
@@ -1991,6 +2258,10 @@ class TicTacToeGame {
   }
 
   resetRound(isSilent = false) {
+    if (this.botMoveTimer) {
+      clearTimeout(this.botMoveTimer);
+      this.botMoveTimer = null;
+    }
     this.board.fill(null);
     this.moveHistory = { X: [], O: [] };
     this.gameActive = true;
@@ -2014,12 +2285,10 @@ class TicTacToeGame {
     });
 
     this.updateTurnUI();
+    this.fitViewportScale();
 
     if (this.gameMode === 'ai' && this.currentPlayer === 'O') {
-      if (!isSilent) {
-        this.voice.speak('新的一局开始，这局由电脑小伙伴先下棋！', true);
-      }
-      this.triggerBotMove();
+      this.triggerBotMove({ isOpeningBotMove: true, silent: isSilent });
       return;
     }
 

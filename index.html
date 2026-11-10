@@ -27,7 +27,19 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=20261109-v12">
+  <link rel="stylesheet" href="style.css?v=20261109-v13">
+  <script>
+    // 最早阶段捕获浏览器原生 PWA 一步安装事件，确保不错过触发时机，并立即注册 Service Worker
+    window.__deferredPwaPrompt = null;
+    window.addEventListener('beforeinstallprompt', function (e) {
+      e.preventDefault();
+      window.__deferredPwaPrompt = e;
+      window.dispatchEvent(new CustomEvent('pwa-prompt-ready'));
+    });
+    if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.protocol === 'http:')) {
+      navigator.serviceWorker.register('./sw.js').catch(function () {});
+    }
+  </script>
 </head>
 <body>
   <!-- Floating Cheerful Background Elements -->
@@ -43,48 +55,56 @@
   <!-- Fullscreen Particle Confetti Canvas -->
   <canvas id="confettiCanvas"></canvas>
 
-  <!-- Main Tablet Application Shell -->
-  <div class="tablet-layout-container">
-    <!-- Top Header Bar -->
-    <header class="app-header">
-      <div class="header-left">
-        <img src="icons/icon.svg" alt="儿童三子棋" class="brand-app-icon" />
-        <div class="logo-text">
-          <h1>儿童三子棋 <span class="sub-badge">智慧乐园 PWA 🎮</span></h1>
-        </div>
-      </div>
-
-      <!-- Header Controls: Rule Mode Quick Switch, Reward Jar, Voice, Fullscreen, Settings -->
-      <div class="header-right">
-        <!-- Quick Rule Mode Toggle: Classic vs Infinite 3-Piece -->
-        <div class="rule-quick-pill" id="ruleQuickSwitch" role="group" aria-label="玩法规则切换">
-          <button type="button" class="rule-pill-option active" data-rule="classic" title="经典三子棋：9格下满或连成3颗">
-            🎲 经典
-          </button>
-          <button type="button" class="rule-pill-option" data-rule="infinite" title="灵动三子棋：每人最多留3颗，下第4颗时最早的1颗消失，永不平局！">
-            ⚡ 满3消1
-          </button>
+  <!-- Fixed Zero-Scroll Viewport Stage with Dynamic Auto-Scaling -->
+  <div class="viewport-stage" id="viewportStage">
+    <!-- Main Tablet Application Shell -->
+    <div class="tablet-layout-container" id="layoutContainer">
+      <!-- Top Header Bar -->
+      <header class="app-header">
+        <div class="header-left">
+          <img src="icons/icon.svg" alt="儿童三子棋" class="brand-app-icon" />
+          <div class="logo-text">
+            <h1>儿童三子棋 <span class="sub-badge">智慧乐园 PWA 🎮</span></h1>
+          </div>
         </div>
 
-        <button id="openRewardBtn" class="reward-pill-btn" aria-label="打开奖励宝箱与扭蛋屋" title="点击查看勋章与星星扭蛋屋">
-          <span class="star-icon-bounce">⭐</span>
-          <span class="star-count-badge" id="headerStarCount">0</span>
-          <span class="reward-btn-label" id="rewardBtnLabel">去赢星星！🎁</span>
-        </button>
+        <!-- Header Controls: Rule Mode Quick Switch, Reward Jar, PWA Install, Voice, Fullscreen, Settings -->
+        <div class="header-right">
+          <!-- Quick Rule Mode Toggle: Classic vs Infinite 3-Piece -->
+          <div class="rule-quick-pill" id="ruleQuickSwitch" role="group" aria-label="玩法规则切换">
+            <button type="button" class="rule-pill-option active" data-rule="classic" title="经典三子棋：9格下满或连成3颗">
+              🎲 经典
+            </button>
+            <button type="button" class="rule-pill-option" data-rule="infinite" title="灵动三子棋：每人最多留3颗，下第4颗时最早的1颗消失，永不平局！">
+              ⚡ 满3消1
+            </button>
+          </div>
 
-        <button id="soundToggleBtn" class="pill-btn sound-icon-btn" title="开关AI真人语音与音效" aria-label="开关语音与音效">
-          <span id="soundIcon">🔊</span>
-        </button>
+          <button id="openRewardBtn" class="reward-pill-btn" aria-label="打开奖励宝箱与扭蛋屋" title="点击查看勋章与星星扭蛋屋">
+            <span class="star-icon-bounce">⭐</span>
+            <span class="star-count-badge" id="headerStarCount">0</span>
+            <span class="reward-btn-label" id="rewardBtnLabel">去赢星星！🎁</span>
+          </button>
 
-        <button id="fullscreenBtn" class="pill-btn icon-circle-btn" title="切换全屏沉浸模式" aria-label="切换全屏">
-          <span id="fullscreenIcon">⛶</span>
-        </button>
+          <button id="headerInstallPwaBtn" class="pill-btn header-install-pwa-btn" title="一步安装为桌面独立 App，全屏无地址栏" aria-label="安装App">
+            <span>📲</span>
+            <span class="install-btn-label">安装App</span>
+          </button>
 
-        <button id="openSettingsBtn" class="pill-btn settings-header-btn" title="游戏设置（换角色/音色/模式/难度）" aria-label="打开设置">
-          <span>⚙️ 设置</span>
-        </button>
-      </div>
-    </header>
+          <button id="soundToggleBtn" class="pill-btn sound-icon-btn" title="开关AI真人语音与音效" aria-label="开关语音与音效">
+            <span id="soundIcon">🔊</span>
+          </button>
+
+          <button id="fullscreenBtn" class="pill-btn icon-circle-btn" title="切换全屏沉浸模式" aria-label="切换全屏">
+            <span id="fullscreenIcon">⛶</span>
+          </button>
+
+          <button id="openSettingsBtn" class="pill-btn settings-header-btn" title="游戏设置（换角色/音色/模式/难度）" aria-label="打开设置">
+            <span>⚙️</span>
+            <span class="settings-btn-label">设置</span>
+          </button>
+        </div>
+      </header>
 
     <!-- Main Tablet Grid: Left Sidebar + Right Arena -->
     <div class="tablet-grid-layout">
@@ -209,6 +229,7 @@
           </div>
         </div>
       </main>
+    </div>
     </div>
   </div>
 
@@ -464,47 +485,43 @@
     </div>
   </div>
 
-  <!-- iPad / Tablet Add to Home Screen Guide Modal -->
-  <div class="modal-backdrop hidden" id="pwaGuideModal">
-    <div class="modal-card confirm-modal-card" style="max-width: 500px;">
-      <div class="modal-decoration">📲</div>
-      <h2 class="modal-title" style="color: #0284c7;">添加到主屏幕 · 满屏畅玩</h2>
-      <p class="modal-subtitle">只需 3 步，像原生 App 一样全屏玩三子棋，断网也能离线畅玩！</p>
-      <div class="pwa-steps-list">
-        <div class="pwa-step-item">
-          <span class="pwa-step-num">1</span>
-          <span>在 iPad / 手机浏览器中打开本页面</span>
-        </div>
-        <div class="pwa-step-item">
-          <span class="pwa-step-num">2</span>
-          <span>点击浏览器顶部或底部的 <strong>「分享 📤」</strong> 或菜单按钮</span>
-        </div>
-        <div class="pwa-step-item">
-          <span class="pwa-step-num">3</span>
-          <span>选择 <strong>「添加到主屏幕 ➕」</strong> 即可在桌面生成图标！</span>
+  <!-- 网页打开时自动弹出的「一步安装桌面 App」提醒弹窗 Modal -->
+  <div class="modal-backdrop hidden" id="pwaInstallModal" role="dialog" aria-modal="true" aria-labelledby="pwaModalTitle">
+    <div class="modal-card pwa-install-modal-card">
+      <button type="button" id="closePwaModalBtn" class="close-icon-btn pwa-close-floating" aria-label="关闭">✖</button>
+      <div class="pwa-modal-app-badge">
+        <img src="icons/icon-192.png" alt="儿童三子棋图标" class="pwa-modal-app-icon" />
+        <div class="pwa-modal-app-meta">
+          <h2 id="pwaModalTitle" class="pwa-modal-title">儿童三子棋 App</h2>
+          <p class="pwa-modal-subtitle">晓晓真人语音 · 满3消1灵动对战 · 星星扭蛋屋</p>
         </div>
       </div>
-      <div class="modal-buttons" style="margin-top: 16px;">
-        <button id="closePwaGuideBtn" class="modal-btn main-btn">
-          🌟 我学会啦！
+      <div class="pwa-modal-perks">
+        <span class="pwa-perk-pill">✨ 全屏自适应缩放</span>
+        <span class="pwa-perk-pill">🎙️ 晓晓自然语音</span>
+        <span class="pwa-perk-pill">📶 支持离线畅玩</span>
+      </div>
+      <div id="pwaModalStatusTip" class="pwa-modal-status-tip" hidden></div>
+      <div class="pwa-modal-actions">
+        <button type="button" id="pwaModalInstallBtn" class="modal-btn pwa-install-primary-btn">
+          <span>📲 一步安装到桌面</span>
+        </button>
+        <button type="button" id="pwaModalDismissBtn" class="pwa-install-later-btn">
+          暂不安装，直接在网页玩 ➔
         </button>
       </div>
     </div>
   </div>
 
+  <!-- Global Lightweight Toast Notification -->
+  <div id="appToast" class="app-toast hidden" role="status" aria-live="polite"></div>
+
   <!-- Flying Star Animation Container -->
   <div id="starFlyContainer" class="star-fly-container"></div>
 
   <!-- Load Natural Offline TTS + Online AI Neural TTS + Game Engine -->
-  <script src="lib/web-natural-tts.js?v=20261109-v12"></script>
-  <script src="lib/web-online-tts.js?v=20261109-v12"></script>
-  <script src="script.js?v=20261109-v12"></script>
-  <script>
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', function () {
-        navigator.serviceWorker.register('./sw.js').catch(function () {});
-      });
-    }
-  </script>
+  <script src="lib/web-natural-tts.js?v=20261109-v13"></script>
+  <script src="lib/web-online-tts.js?v=20261109-v13"></script>
+  <script src="script.js?v=20261109-v13"></script>
 </body>
 </html>
