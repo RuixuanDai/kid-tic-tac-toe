@@ -520,6 +520,23 @@ class TicTacToeGame {
     this.deferredInstallPrompt = null;
     this._pwaAutoPromptShown = false;
     this._toastTimer = null;
+    this._lockedViewportWidth = 0;
+    this._minObservedInnerHeight = 0;
+
+    this.screenMode = 'normal';
+    try {
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.get('screen') === 'normal') {
+        this.screenMode = 'normal';
+        localStorage.setItem('ttt_screen_mode', 'normal');
+      } else {
+        this.screenMode =
+          localStorage.getItem('ttt_screen_mode') === 'fullscreen' ? 'fullscreen' : 'normal';
+      }
+    } catch (_) {
+      this.screenMode = 'normal';
+    }
+    window.__tttAllowFullscreen = this.screenMode === 'fullscreen';
 
     // Load persistent reward data
     this.loadRewardsData();
@@ -655,6 +672,8 @@ class TicTacToeGame {
     this.fullscreenBtn = document.getElementById('fullscreenBtn');
     this.fullscreenIcon = document.getElementById('fullscreenIcon');
     this.fullscreenLabel = document.getElementById('fullscreenLabel');
+    this.webapkFsNotice = document.getElementById('webapkFsNotice');
+    this.openNormalBrowserBtn = document.getElementById('openNormalBrowserBtn');
     this.updateAppBtn = document.getElementById('updateAppBtn');
     this.firstTurnToggleBtn = document.getElementById('firstTurnToggleBtn');
     this.firstTurnLabel = document.getElementById('firstTurnLabel');
@@ -701,14 +720,84 @@ class TicTacToeGame {
   }
 
   initViewportAutoScale() {
-    // Pure CSS 100dvh flex/grid auto-sizing handles all screen ratios natively without transform resize loops
     if (this.layoutContainer) {
       this.layoutContainer.style.transform = '';
     }
+    this.applyScreenModeBodyClass();
+    this.fitViewportScale(true);
+
+    window.addEventListener('resize', () => {
+      this.fitViewportScale(false);
+    });
+    window.addEventListener('orientationchange', () => {
+      setTimeout(() => this.fitViewportScale(true), 180);
+    });
   }
 
-  fitViewportScale() {
-    // No-op: layout fits 100dvh natively via CSS without mutating transform on resize
+  fitViewportScale(forceReset = false) {
+    const w = window.innerWidth || document.documentElement.clientWidth || 380;
+    const h = window.innerHeight || document.documentElement.clientHeight || 680;
+    const widthChangedSignificantly = Math.abs(w - this._lockedViewportWidth) > 45;
+
+    if (forceReset || widthChangedSignificantly || !this._minObservedInnerHeight) {
+      this._lockedViewportWidth = w;
+      this._minObservedInnerHeight = h;
+    } else if (h < this._minObservedInnerHeight) {
+      // Record the smaller non-fullscreen height when system status/navigation bars are visible
+      this._minObservedInnerHeight = h;
+    }
+
+    // In Non-Fullscreen mode ('normal'), NEVER expand --app-vh when innerHeight increases
+    // (e.g., 2 seconds after exiting fullscreen when Android WebAPK hides system bars).
+    let targetVh = h;
+    if (this.screenMode !== 'fullscreen') {
+      const baseH = this._minObservedInnerHeight || h;
+      const screenH = window.screen && window.screen.height ? window.screen.height : h;
+      const nonFsCap = h >= screenH - 24 ? Math.round(h * 0.91) : Math.round(baseH * 0.95);
+      targetVh = Math.max(450, Math.min(baseH, nonFsCap));
+    }
+
+    document.documentElement.style.setProperty('--app-vh', `${targetVh}px`);
+  }
+
+  isDomFullscreen() {
+    const doc = window.document;
+    return Boolean(
+      doc.fullscreenElement ||
+        doc.mozFullScreenElement ||
+        doc.webkitFullscreenElement ||
+        doc.msFullscreenElement
+    );
+  }
+
+  isForcedFullscreenWebAPK() {
+    const inDisplayFs = Boolean(
+      window.matchMedia && window.matchMedia('(display-mode: fullscreen)').matches
+    );
+    return inDisplayFs && !this.isDomFullscreen();
+  }
+
+  applyScreenModeBodyClass() {
+    const isFs = this.screenMode === 'fullscreen';
+    document.body.classList.toggle('mode-fullscreen', isFs);
+    document.body.classList.toggle('mode-non-fullscreen', !isFs);
+    if (this.fullscreenIcon) {
+      this.fullscreenIcon.textContent = isFs ? '⛶' : '🗔';
+    }
+    if (this.fullscreenLabel) {
+      this.fullscreenLabel.textContent = isFs
+        ? '当前：全屏（点此设为非全屏）'
+        : '当前：非全屏（点此进入全屏）';
+    }
+    if (this.fullscreenBtn) {
+      this.fullscreenBtn.classList.toggle('fs-active-btn', isFs);
+    }
+    if (this.webapkFsNotice) {
+      this.webapkFsNotice.classList.toggle(
+        'hidden',
+        !(this.isForcedFullscreenWebAPK() && !isFs)
+      );
+    }
   }
 
   isStandaloneMode() {
@@ -1035,7 +1124,7 @@ class TicTacToeGame {
     // Sound toggle
     this.soundToggleBtn.addEventListener('click', () => this.toggleSound());
 
-    // Fullscreen toggle (inside Settings Modal)
+    // Fullscreen / Non-Fullscreen toggle (inside Settings Modal)
     if (this.fullscreenBtn) {
       this.fullscreenBtn.addEventListener('click', () => {
         this.sound.playClick();
@@ -1043,20 +1132,42 @@ class TicTacToeGame {
       });
     }
 
-    const syncFsUI = () => {
+    if (this.openNormalBrowserBtn) {
+      this.openNormalBrowserBtn.addEventListener('click', () => {
+        this.sound.playClick();
+        this.escapeFullscreenWebAPK();
+      });
+    }
+
+    const onFullscreenChange = () => {
       const doc = window.document;
-      const isFs = Boolean(
-        doc.fullscreenElement ||
-          doc.mozFullScreenElement ||
-          doc.webkitFullscreenElement ||
-          doc.msFullscreenElement
-      );
-      if (this.fullscreenLabel) {
-        this.fullscreenLabel.textContent = isFs ? '退出全屏模式' : '进入全屏模式';
+      const inDomFs = this.isDomFullscreen();
+      const cancelFullScreen =
+        doc.exitFullscreen ||
+        doc.mozCancelFullScreen ||
+        doc.webkitExitFullscreen ||
+        doc.msExitFullscreen;
+
+      if (this.screenMode !== 'fullscreen' && inDomFs) {
+        // User locked Non-Fullscreen mode: immediately block/exit any unexpected auto-fullscreen!
+        window.__tttAllowFullscreen = false;
+        if (cancelFullScreen) {
+          cancelFullScreen.call(doc).catch(() => {});
+        }
+      } else if (this.screenMode === 'fullscreen' && !inDomFs) {
+        // User exited fullscreen via system Back gesture or Esc: lock into Non-Fullscreen mode
+        this.screenMode = 'normal';
+        window.__tttAllowFullscreen = false;
+        try {
+          localStorage.setItem('ttt_screen_mode', 'normal');
+        } catch (_) {}
       }
+
+      this.applyScreenModeBodyClass();
+      this.fitViewportScale(false);
     };
-    document.addEventListener('fullscreenchange', syncFsUI);
-    document.addEventListener('webkitfullscreenchange', syncFsUI);
+    document.addEventListener('fullscreenchange', onFullscreenChange);
+    document.addEventListener('webkitfullscreenchange', onFullscreenChange);
 
     // Force Update / Clear Cache Button in Settings
     if (this.updateAppBtn) {
@@ -1268,21 +1379,59 @@ class TicTacToeGame {
       doc.webkitExitFullscreen ||
       doc.msExitFullscreen;
 
-    if (
-      !doc.fullscreenElement &&
-      !doc.mozFullScreenElement &&
-      !doc.webkitFullscreenElement &&
-      !doc.msFullscreenElement
-    ) {
-      if (requestFullScreen) {
-        requestFullScreen.call(docEl).catch(() => {
-          this.showToast('💡 当前环境无需手动全屏，或请使用「安装到桌面 App」全屏畅玩！');
-        });
-      } else {
-        this.showToast('💡 请点击「添加到桌面 App」开启原生全屏模式！');
+    const nextMode = this.screenMode === 'fullscreen' ? 'normal' : 'fullscreen';
+    this.screenMode = nextMode;
+    window.__tttAllowFullscreen = nextMode === 'fullscreen';
+    try {
+      localStorage.setItem('ttt_screen_mode', nextMode);
+    } catch (_) {}
+
+    if (nextMode === 'normal') {
+      // Switch to Non-Fullscreen mode and lock height so it never jumps back to fullscreen
+      if (this.isDomFullscreen() && cancelFullScreen) {
+        cancelFullScreen.call(doc).catch(() => {});
       }
-    } else if (cancelFullScreen) {
-      cancelFullScreen.call(doc).catch(() => {});
+      this.applyScreenModeBodyClass();
+      this.fitViewportScale(false);
+      this.showToast('🗔 已锁定为「非全屏模式」，不会再自动跳回全屏！');
+      this.voice.speak('已锁定为非全屏模式！', true);
+    } else {
+      // Explicitly enter Fullscreen mode
+      this.applyScreenModeBodyClass();
+      this.fitViewportScale(true);
+      if (requestFullScreen && !this.isDomFullscreen()) {
+        requestFullScreen.call(docEl).catch(() => {});
+      }
+      this.showToast('⛶ 已开启「全屏模式」');
+      this.voice.speak('已开启全屏模式！', true);
+    }
+  }
+
+  escapeFullscreenWebAPK() {
+    this.screenMode = 'normal';
+    window.__tttAllowFullscreen = false;
+    try {
+      localStorage.setItem('ttt_screen_mode', 'normal');
+    } catch (_) {}
+
+    const targetUrl =
+      window.location.origin +
+      window.location.pathname +
+      '?screen=normal&v=' +
+      Date.now();
+    const isAndroid = /Android/i.test(navigator.userAgent || '');
+
+    if (isAndroid) {
+      const noProto = targetUrl.replace(/^https?:\/\//i, '');
+      const intentUrl =
+        'intent://' +
+        noProto +
+        '#Intent;scheme=https;package=com.android.chrome;S.browser_fallback_url=' +
+        encodeURIComponent(targetUrl) +
+        ';end';
+      window.location.href = intentUrl;
+    } else {
+      window.open(targetUrl, '_blank');
     }
   }
 
@@ -1308,6 +1457,7 @@ class TicTacToeGame {
   }
 
   openSettingsModal() {
+    this.applyScreenModeBodyClass();
     this.settingsModal.classList.remove('hidden');
     this.voice.speak('进入游戏设置，挑选你喜欢的角色、语音和玩法！', true);
   }

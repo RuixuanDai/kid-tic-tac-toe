@@ -10,6 +10,9 @@
 /manifest.webmanifest
   Cache-Control: no-cache, no-store, must-revalidate
 
+/manifest-v2.webmanifest
+  Cache-Control: no-cache, no-store, must-revalidate
+
 /script.js
   Cache-Control: public, max-age=0, must-revalidate
 
