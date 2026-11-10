@@ -13,7 +13,7 @@
   <meta name="theme-color" content="#ff3366">
 
   <!-- PWA Manifest & Icons -->
-  <link rel="manifest" href="manifest-v2.webmanifest?v=20261109-v18">
+  <link rel="manifest" href="manifest-v2.webmanifest?v=20261109-v19">
   <link rel="icon" type="image/svg+xml" href="icons/icon.svg">
   <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
   <link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon.png">
@@ -26,7 +26,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=20261109-v18">
+  <link rel="stylesheet" href="style.css?v=20261109-v19">
   <script>
     // 1. 严防自动跳回全屏：仅当用户在「设置」中主动开启全屏时才允许 requestFullscreen
     (function () {
@@ -323,18 +323,7 @@
         </div>
       </div>
 
-      <!-- Section 3: AI Neural Natural Voice Selection -->
-      <div class="settings-section">
-        <div class="diff-title-row">
-          <h3 class="section-title">🗣️ AI 真人自然语音播报</h3>
-          <button type="button" id="testVoiceBtn" class="mini-pill-btn">🎵 试听当前声音</button>
-        </div>
-        <div class="voice-grid-settings" id="voiceChipsGrid">
-          <!-- Populated dynamically from TTS_VOICE_OPTIONS -->
-        </div>
-      </div>
-
-      <!-- Section 4: Themes (Balanced 4+3 Grid, Classic ❌ vs ⭕) -->
+      <!-- Section 3: Themes (Balanced 4+3 Grid, Classic ❌ vs ⭕ — High Frequency) -->
       <div class="settings-section">
         <h3 class="section-title">🎨 挑选喜欢的萌宠角色搭档</h3>
         <div class="themes-grid-settings" id="themeChips">
@@ -372,6 +361,17 @@
         </div>
       </div>
 
+      <!-- Section 4: AI Neural Natural Voice Selection (Low Frequency) -->
+      <div class="settings-section">
+        <div class="diff-title-row">
+          <h3 class="section-title">🗣️ AI 真人自然语音播报</h3>
+          <button type="button" id="testVoiceBtn" class="mini-pill-btn">🎵 试听当前声音</button>
+        </div>
+        <div class="voice-grid-settings" id="voiceChipsGrid">
+          <!-- Populated dynamically from TTS_VOICE_OPTIONS -->
+        </div>
+      </div>
+
       <!-- Section 5: System, Fullscreen, Update & PWA Tools -->
       <div class="settings-section">
         <h3 class="section-title">🛠️ 应用工具与规则选项</h3>
@@ -387,12 +387,6 @@
           </button>
           <button type="button" id="firstTurnToggleBtn" class="tool-pill-btn">
             🔄 先手规则：<span id="firstTurnLabel">我方先手</span>
-          </button>
-        </div>
-        <div id="webapkFsNotice" class="webapk-fs-notice hidden">
-          <span>💡 检测到当前桌面图标在早期安装时带有系统沉浸全屏标记。界面已为您锁定为<strong>非全屏防跳窗口</strong>；如需永久保留系统状态栏，可点下方按钮或删除旧桌面图标后重新添加：</span>
-          <button type="button" id="openNormalBrowserBtn" class="webapk-escape-btn">
-            🔓 立即以非全屏窗口打开
           </button>
         </div>
       </div>
@@ -554,8 +548,8 @@
   <div id="starFlyContainer" class="star-fly-container"></div>
 
   <!-- Load Natural Offline TTS + Online AI Neural TTS + Game Engine -->
-  <script src="lib/web-natural-tts.js?v=20261109-v18"></script>
-  <script src="lib/web-online-tts.js?v=20261109-v18"></script>
-  <script src="script.js?v=20261109-v18"></script>
+  <script src="lib/web-natural-tts.js?v=20261109-v19"></script>
+  <script src="lib/web-online-tts.js?v=20261109-v19"></script>
+  <script src="script.js?v=20261109-v19"></script>
 </body>
 </html>

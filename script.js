@@ -790,12 +790,6 @@ class TicTacToeGame {
     if (this.fullscreenBtn) {
       this.fullscreenBtn.classList.toggle('fs-active-btn', isFs);
     }
-    if (this.webapkFsNotice) {
-      this.webapkFsNotice.classList.toggle(
-        'hidden',
-        !(this.isForcedFullscreenWebAPK() && !isFs)
-      );
-    }
   }
 
   isStandaloneMode() {
@@ -926,7 +920,7 @@ class TicTacToeGame {
         this.headerInstallPwaBtn.style.display = 'none';
       }
       if (this.pwaInstallBtn) {
-        this.pwaInstallBtn.textContent = '✅ 已安装为桌面全屏 App';
+        this.pwaInstallBtn.textContent = '✅ 已安装为桌面 App';
         this.pwaInstallBtn.disabled = true;
       }
       if (this.pwaInstallModal) {
