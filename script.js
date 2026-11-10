@@ -753,8 +753,8 @@ class TicTacToeGame {
     if (this.screenMode !== 'fullscreen') {
       const baseH = this._minObservedInnerHeight || h;
       const screenH = window.screen && window.screen.height ? window.screen.height : h;
-      const nonFsCap = h >= screenH - 24 ? Math.round(h * 0.91) : Math.round(baseH * 0.95);
-      targetVh = Math.max(450, Math.min(baseH, nonFsCap));
+      const nonFsCap = baseH >= screenH - 20 ? Math.round(screenH - 56) : baseH;
+      targetVh = Math.max(460, Math.min(baseH, nonFsCap));
     }
 
     document.documentElement.style.setProperty('--app-vh', `${targetVh}px`);

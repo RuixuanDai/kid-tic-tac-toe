@@ -77,7 +77,7 @@ body {
 }
 
 body.mode-non-fullscreen .viewport-stage {
-  padding: 16px 14px;
+  padding: 6px 8px;
 }
 
 /* Floating Dreamy Background Decorations */
@@ -2199,69 +2199,94 @@ body.mode-fullscreen .tablet-layout-container {
 
 /* =========================================================
    Tier 3: Folded Foldable Phones (Cover Screen) & Portrait Smartphones (<560px)
-   Locked Viewport Variable Single-Screen Layout (Zero Scroll, Zero Fullscreen Jump!)
+   Locked Viewport Variable Single-Screen Layout (Zero Scroll, Zero Overlap, Zero Jump!)
    ========================================================= */
-@media (max-width: 559px) {
+@media (max-width: 559px), ((max-width: 700px) and (max-aspect-ratio: 4/5)) {
   .tablet-layout-container {
-    width: calc(93vw);
-    height: calc(var(--app-vh, 90vh) - 12px);
-    max-height: calc(var(--app-vh, 90vh) - 12px);
+    width: min(96vw, 460px);
+    height: calc(var(--app-vh, 96vh) - 12px);
+    max-height: calc(var(--app-vh, 96vh) - 12px);
     padding: 8px 10px 10px 10px;
     border-radius: 22px;
-    gap: 6px;
+    gap: 5px;
+    overflow: hidden;
   }
   body.mode-fullscreen .tablet-layout-container {
     width: calc(100vw - 10px);
   }
   .app-header {
+    flex-wrap: nowrap;
     padding-bottom: 5px;
     gap: 4px;
     flex-shrink: 0;
   }
+  .header-left {
+    min-width: 0;
+    flex-shrink: 1;
+    gap: 5px;
+  }
+  .header-right {
+    flex-wrap: nowrap;
+    flex-shrink: 0;
+    gap: 4px;
+  }
   .brand-app-icon {
-    width: 28px;
-    height: 28px;
-    border-radius: 8px;
+    width: 26px;
+    height: 26px;
+    border-radius: 7px;
+    flex-shrink: 0;
   }
   .logo-text h1 {
-    font-size: 1.1rem;
+    font-size: 0.96rem;
+    white-space: nowrap;
   }
   .sub-badge,
   .reward-btn-label,
-  .settings-btn-label {
+  .settings-btn-label,
+  .install-btn-label {
     display: none;
   }
+  .rule-quick-pill {
+    padding: 2px;
+  }
   .rule-pill-option {
-    font-size: 0.75rem;
-    padding: 3px 7px;
+    font-size: 0.72rem;
+    padding: 3px 6px;
+    white-space: nowrap;
   }
   .reward-pill-btn {
-    padding: 4px 8px;
-    font-size: 0.8rem;
+    padding: 3px 7px;
+    font-size: 0.78rem;
     gap: 3px;
   }
-  .header-install-pwa-btn {
-    padding: 4px 8px;
-    font-size: 0.76rem;
+  .star-icon-bounce {
+    font-size: 0.98rem;
   }
+  .star-count-badge {
+    font-size: 0.78rem;
+    padding: 1px 5px;
+    min-width: 18px;
+  }
+  .header-install-pwa-btn,
   .sound-icon-btn,
   .icon-circle-btn,
   .settings-header-btn {
-    width: 32px;
-    height: 32px;
+    width: 30px;
+    height: 30px;
     padding: 0;
-    font-size: 1.02rem;
+    font-size: 0.96rem;
     border-radius: 50%;
+    flex-shrink: 0;
   }
 
-  /* Flatten sidebar children so Board sits prominently in the middle of the screen */
+  /* Flatten sidebar children so Board sits cleanly in the middle without overlapping */
   .tablet-grid-layout {
     display: flex;
     flex-direction: column;
     justify-content: space-between;
     flex: 1 1 auto;
     min-height: 0;
-    gap: 6px;
+    gap: 5px;
   }
   .tablet-sidebar {
     display: contents;
@@ -2274,98 +2299,87 @@ body.mode-fullscreen .tablet-layout-container {
     flex-shrink: 0;
   }
   .score-card {
-    padding: 4px 5px;
+    padding: 4px 6px;
     border-radius: 12px;
     border-width: 2px;
+    gap: 5px;
   }
   .avatar-badge {
-    font-size: 1.3rem;
-  }
-  .player-name {
-    font-size: 0.7rem;
-  }
-  .score-number {
     font-size: 1.25rem;
   }
+  .player-name {
+    font-size: 0.68rem;
+    line-height: 1.15;
+  }
+  .score-number {
+    font-size: 1.15rem;
+    line-height: 1.05;
+  }
 
-  /* 2. Turn Status + Auto-Scaling Square 3x3 Board in Center */
+  /* 2. Turn Status + Square 3x3 Board in Center (strict height: auto so it NEVER overlaps siblings!) */
   .tablet-main-arena {
     order: 2;
-    flex: 1 1 auto;
-    min-height: 0;
+    height: auto !important;
+    flex: 0 0 auto;
     gap: 5px;
-    justify-content: center;
+    justify-content: flex-start;
   }
   .status-banner {
-    padding: 5px 8px;
-    font-size: 0.86rem;
+    padding: 4px 8px;
+    font-size: 0.85rem;
     border-radius: 12px;
     border-width: 2px;
     gap: 5px;
     flex-shrink: 0;
   }
   .status-icon {
-    font-size: 1.2rem;
+    font-size: 1.15rem;
   }
   .banner-voice-btn {
-    width: 26px;
-    height: 26px;
-    font-size: 0.88rem;
+    width: 24px;
+    height: 24px;
+    font-size: 0.82rem;
   }
   .board-wrapper {
-    flex: 1 1 auto;
-    min-height: 0;
+    flex: 0 0 auto;
+    height: auto;
     padding: 0;
   }
   .board {
-    width: min(84vw, 310px, calc(var(--app-vh, 90vh) - 305px));
-    height: min(84vw, 310px, calc(var(--app-vh, 90vh) - 305px));
+    width: min(82vw, 290px, calc(var(--app-vh, 96vh) - 276px));
+    height: min(82vw, 290px, calc(var(--app-vh, 96vh) - 276px));
     gap: 7px;
     padding: 8px;
     border-radius: 20px;
   }
   .cell {
-    font-size: clamp(1.8rem, 7vmin, 2.6rem);
+    font-size: clamp(1.8rem, 7vmin, 2.5rem);
     border-radius: 14px;
   }
 
-  /* 3. Coach Hint & Quick Settings Bar */
+  /* 3. Coach Hint & Quick Settings Bar (Single compact row, no text wrapping) */
   .match-info-card {
     order: 3;
-    padding: 6px 8px;
-    gap: 5px;
-    border-radius: 14px;
+    padding: 0;
+    background: transparent;
+    border: none;
     flex-shrink: 0;
   }
   .match-info-top {
-    gap: 6px;
-  }
-  .match-info-icon {
-    font-size: 1.2rem;
-    padding: 2px;
-    border-radius: 8px;
-  }
-  .match-info-text-group {
-    flex-direction: row;
-    align-items: center;
-    justify-content: space-between;
-    width: 100%;
-    gap: 6px;
-  }
-  .match-info-title {
-    font-size: 0.82rem;
-  }
-  .match-info-desc {
     display: none;
+  }
+  .match-card-btn-row {
+    gap: 6px;
   }
   .hint-coach-btn,
   .change-partner-btn {
-    padding: 6px 8px;
-    font-size: 0.82rem;
-    border-radius: 10px;
+    padding: 7px 10px;
+    font-size: 0.84rem;
+    border-radius: 12px;
+    white-space: nowrap;
   }
 
-  /* 4. New Round & Clear Score Buttons */
+  /* 4. New Round & Clear Score Buttons (Single row, no text wrapping) */
   .sidebar-actions {
     order: 4;
     gap: 6px;
@@ -2374,13 +2388,15 @@ body.mode-fullscreen .tablet-layout-container {
   .primary-action-btn,
   .secondary-action-btn {
     padding: 8px 10px;
-    font-size: 0.88rem;
+    font-size: 0.86rem;
+    border-radius: 12px;
+    white-space: nowrap;
   }
 
   /* 5. Compact Rank & Progress Strip at Bottom */
   .reward-summary-card {
     order: 5;
-    padding: 5px 8px;
+    padding: 5px 9px;
     border-radius: 12px;
     flex-shrink: 0;
   }
@@ -2389,22 +2405,22 @@ body.mode-fullscreen .tablet-layout-container {
     gap: 6px;
   }
   .rank-avatar {
-    font-size: 1.25rem;
+    font-size: 1.2rem;
     padding: 2px;
     border-radius: 8px;
   }
   .rank-title {
-    font-size: 0.82rem;
+    font-size: 0.8rem;
   }
   .rank-sub {
-    font-size: 0.74rem;
+    font-size: 0.72rem;
   }
   .progress-bar-container {
-    height: 7px;
+    height: 6px;
     margin-bottom: 2px;
   }
   .progress-label {
-    font-size: 0.68rem;
+    font-size: 0.66rem;
   }
 
   /* Modal tweaks for narrow screens */
