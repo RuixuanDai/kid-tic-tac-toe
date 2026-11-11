@@ -1,12 +1,13 @@
 /**
  * Cloudflare Pages Function: GET /api/tts?voice=zh-CN-XiaoxiaoNeural&rate=-2%&text=...&ts=...&sig=...
  *
- * 通用在线 AI 神经网络真人语音接口（含多音色白名单选择 + 5 层防盗刷安全网关）：
- * 1. 多音色白名单支持：内置精选中文与英文自然神经音色（晓晓 / 晓伊 / 云夏 / 晓北 / 云健 / 云希 / 晓妮 / Ana / Jenny / Guy）供前端按需选择或切换；
- * 2. Origin / Referer 严格域名白名单：仅允许项目自身的 Cloudflare Pages (*.pages.dev)、GitHub Pages (*.github.io) 与本地局域网调试域名访问，拒绝第三方网站盗链与无头脚本；
- * 3. 动态时间戳签名校验 (ts + sig)：采用 URL 查询参数传递 ±300 秒内的时间戳与 SHA-256 签名（CORS 简单请求，零 OPTIONS 预检延迟），防止 URL 伪造与重放攻击；
- * 4. Cloudflare 全球边缘永久缓存 (caches.default, 1 年 immutable)：命中缓存的句子直接从边缘节点返回，完全不消耗 Azure 额度；
- * 5. 单 IP「未命中缓存」限流器 (Per-IP Cache-Miss Rate Limiter)：仅对未命中缓存、需实际调用 Azure 合成的新句子按客户端 IP 限流（每分钟最多 20 次，每小时最多 150 次），严防黑客脚本刷爆 Free F0 月度 50 万字符免费额度。
+ * 通用在线 AI 神经网络真人语音网关（多音色白名单 + 6 层防盗刷安全架构）：
+ * 1. 服务端密钥隔离：AZURE_SPEECH_KEY 仅存于 Cloudflare Secrets，前端零密钥暴露；
+ * 2. Origin / Referer 严格同项目与专属域名白名单：严禁 *.github.io / *.pages.dev 全网通配，仅放行当前 Pages 项目自身域名（含预览分支）、ruixuandai.github.io、ALLOWED_TTS_HOSTS 与本地局域网调试 IP，边缘直接拦截盗链与裸调（403 零额度消耗）；
+ * 3. 动态时间戳 + 恒定时间 SHA-256 签名校验 (ts + sig)：URL 查询参数传递 ±300s 时间戳与签名（保持 CORS Simple Request，零 OPTIONS 预检延迟），恒定时间比对防侧信道与参数篡改；
+ * 4. 音色白名单 + 80 字截断 + 棋类专属词库正则锁 (LOCKED_TEXT_REGEX / ALLOWED_TEXT_REGEX)：杜绝长文本消耗，锁死儿童三子棋专属句式，彻底消除逆向白嫖价值；
+ * 5. Cloudflare 全球边缘缓存优先 (caches.default, 1 年 immutable)：验签后剥离 ts/sig 构造标准缓存键，命中缓存消耗 0 个 Azure 字符且不计入限流；
+ * 6. 单 IP + 全局桶双重「未命中缓存」限流器：仅对需实际调用 Azure 的新句子限流（单 IP 20次/分、150次/时；单节点全局 60次/分、600次/时），严防脚本与代理池刷空 Free F0 月度 50 万免费字符。
  */
 
 const ALLOWED_VOICES = new Set([
@@ -28,6 +29,12 @@ const DEFAULT_CLIENT_SECRET = "kmg-tts-2026-guard-v1";
 const MAX_TEXT_LEN = 80;
 const MAX_MISS_PER_MINUTE = 20;
 const MAX_MISS_PER_HOUR = 150;
+const GLOBAL_MAX_MISS_PER_MINUTE = 60;
+const GLOBAL_MAX_MISS_PER_HOUR = 600;
+
+// 针对儿童三子棋专属台词词库锁定允许合成的句式正则（彻底杜绝逆向签名后合成小说/外部商业文本）
+const LOCKED_TEXT_REGEX: RegExp | null =
+  /(?:^你好$|三子棋|下棋|棋盘|棋局|闪光格|中间|角落|连胜|赢啦|再来一局|平局|玩家|轮到|电脑|猫头鹰|小狐|小猴|勋章|解锁|扭蛋|抽到了|霸王龙|独角兽|小熊猫|蓝鲸|狮子王|垂耳兔|小神龙|小企鹅|树袋熊|宇航员|晓晓|晓伊|云夏|晓北|老妹儿|云健|保持专注|离线语音|语音已开启|安全网关)/u;
 
 const TRUSTED_CLIENT_TOKEN = "6A5AA1D4EAFF4E9FB37E23D68491D6F4";
 const EDGE_HTTPS_WS_URL = "https://speech.platform.bing.com/consumer/speech/synthesize/readaloud/edge/v1";
@@ -40,12 +47,14 @@ const MIX_FIRST_WORD = [0xcf98b111, 0x87085b9f, 0x12ceb96d, 0x257e1d83];
 const MIX_SECOND_WORD = [0xa27416f5, 0xd38396ff, 0x7c932b89, 0xbfa49f69];
 
 const ipRateMap = new Map<string, { minBucket: number; minCount: number; hourBucket: number; hourCount: number }>();
+const globalQuota = { minBucket: 0, minCount: 0, hourBucket: 0, hourCount: 0 };
 
 export interface PagesEnv {
   AZURE_SPEECH_KEY?: string;
   AZURE_SPEECH_REGION?: string;
   TTS_CLIENT_SECRET?: string;
   ALLOWED_TTS_HOSTS?: string;
+  ALLOWED_TEXT_REGEX?: string;
 }
 
 export interface PagesContext {
@@ -54,15 +63,31 @@ export interface PagesContext {
   waitUntil(promise: Promise<unknown>): void;
 }
 
-function isAllowedOriginUrl(rawUrl: string, extraHostsCsv?: string): boolean {
+function getPagesProjectBaseHost(reqHostname: string): string | null {
+  const lower = reqHostname.toLowerCase();
+  if (!lower.endsWith(".pages.dev")) return null;
+  const parts = lower.split(".");
+  if (parts.length >= 3) {
+    return parts.slice(-3).join(".");
+  }
+  return null;
+}
+
+function isAllowedOriginUrl(rawUrl: string, reqHostname: string, extraHostsCsv?: string): boolean {
   if (!rawUrl) return false;
   try {
     const parsed = new URL(rawUrl);
     const host = parsed.hostname.toLowerCase();
+    const normalizedReqHost = reqHostname.toLowerCase();
+    const pagesBase = getPagesProjectBaseHost(normalizedReqHost);
+
+    // 严格限制仅允许：当前请求所属域名/Pages 项目自身（含预览子域名）、本人 GitHub Pages 及局域网调试 IP
     if (
-      host.endsWith(".pages.dev") ||
+      host === normalizedReqHost ||
+      (pagesBase !== null && (host === pagesBase || host.endsWith(`.${pagesBase}`))) ||
       host === "ruixuandai.github.io" ||
-      host.endsWith(".github.io") ||
+      host === "kid-tic-tac-toe.pages.dev" ||
+      host.endsWith(".kid-tic-tac-toe.pages.dev") ||
       host === "localhost" ||
       host === "127.0.0.1" ||
       host.startsWith("192.168.") ||
@@ -75,7 +100,11 @@ function isAllowedOriginUrl(rawUrl: string, extraHostsCsv?: string): boolean {
         .split(",")
         .map((s) => s.trim().toLowerCase())
         .filter(Boolean);
-      if (extra.includes(host)) return true;
+      for (const rule of extra) {
+        if (rule.startsWith(".") ? host.endsWith(rule) || host === rule.slice(1) : host === rule) {
+          return true;
+        }
+      }
     }
     return false;
   } catch {
@@ -85,8 +114,8 @@ function isAllowedOriginUrl(rawUrl: string, extraHostsCsv?: string): boolean {
 
 function buildCorsHeaders(request: Request, extraHostsCsv?: string): Record<string, string> {
   const origin = request.headers.get("Origin") ?? "";
-  const reqOrigin = new URL(request.url).origin;
-  const allowedOrigin = isAllowedOriginUrl(origin, extraHostsCsv) ? origin : reqOrigin;
+  const reqUrl = new URL(request.url);
+  const allowedOrigin = isAllowedOriginUrl(origin, reqUrl.hostname, extraHostsCsv) ? origin : reqUrl.origin;
   return {
     "Access-Control-Allow-Origin": allowedOrigin,
     "Access-Control-Allow-Methods": "GET, OPTIONS",
@@ -122,13 +151,35 @@ async function verifySignature(
   const expected = Array.from(new Uint8Array(digest), (b) => b.toString(16).padStart(2, "0"))
     .join("")
     .slice(0, 32);
-  return sig === expected;
+  if (sig.length !== expected.length) return false;
+  // 恒定时间比较 (Constant-Time Comparison)，防范计时侧信道猜解
+  let diff = 0;
+  for (let i = 0; i < expected.length; i++) {
+    diff |= sig.charCodeAt(i) ^ expected.charCodeAt(i);
+  }
+  return diff === 0;
 }
 
 function checkAndIncrementIpQuota(ip: string): boolean {
   const nowSec = Math.floor(Date.now() / 1000);
   const minBucket = Math.floor(nowSec / 60);
   const hourBucket = Math.floor(nowSec / 3600);
+
+  // 全局熔断限流桶：防范多 IP 代理池在同一边缘节点并发刷量
+  if (globalQuota.minBucket !== minBucket) {
+    globalQuota.minBucket = minBucket;
+    globalQuota.minCount = 0;
+  }
+  if (globalQuota.hourBucket !== hourBucket) {
+    globalQuota.hourBucket = hourBucket;
+    globalQuota.hourCount = 0;
+  }
+  if (
+    globalQuota.minCount >= GLOBAL_MAX_MISS_PER_MINUTE ||
+    globalQuota.hourCount >= GLOBAL_MAX_MISS_PER_HOUR
+  ) {
+    return false;
+  }
 
   let record = ipRateMap.get(ip);
   if (!record) {
@@ -155,27 +206,44 @@ function checkAndIncrementIpQuota(ip: string): boolean {
 
   record.minCount += 1;
   record.hourCount += 1;
+  globalQuota.minCount += 1;
+  globalQuota.hourCount += 1;
   return true;
 }
 
 export async function onRequestGet(context: PagesContext): Promise<Response> {
   const { request, env } = context;
+  const url = new URL(request.url);
   const corsHeaders = buildCorsHeaders(request, env?.ALLOWED_TTS_HOSTS);
 
-  // 1. 校验 Origin / Referer 白名单，拦截外部网站盗链与无头脚本直刷
+  // 1. 校验 Origin / Referer 专属域名白名单，边缘直接拦截外部网站盗链与无头脚本直刷（0 额度消耗）
   const origin = request.headers.get("Origin") ?? "";
   const referer = request.headers.get("Referer") ?? "";
 
-  if (!isAllowedOriginUrl(origin, env?.ALLOWED_TTS_HOSTS) && !isAllowedOriginUrl(referer, env?.ALLOWED_TTS_HOSTS)) {
+  if (
+    !isAllowedOriginUrl(origin, url.hostname, env?.ALLOWED_TTS_HOSTS) &&
+    !isAllowedOriginUrl(referer, url.hostname, env?.ALLOWED_TTS_HOSTS)
+  ) {
     return jsonError(403, "Forbidden: unauthorized origin", corsHeaders);
   }
 
-  // 2. 校验与清洗文本（限制 <= 80 字符，且必须含有效中英文或数字）
-  const url = new URL(request.url);
+  // 2. 校验与清洗文本（限制 <= 80 字符，必须含有效中英文或数字，且校验词库正则锁）
   const rawText = url.searchParams.get("text") ?? "";
   const cleaned = cleanTtsInput(rawText);
   if (!cleaned || !/[0-9\u4e00-\u9fa5a-zA-Z]/.test(cleaned)) {
     return jsonError(400, "Invalid or empty text", corsHeaders);
+  }
+  const customPattern = env?.ALLOWED_TEXT_REGEX?.trim();
+  let activeRegex: RegExp | null = LOCKED_TEXT_REGEX;
+  if (customPattern) {
+    try {
+      activeRegex = new RegExp(customPattern, "u");
+    } catch {
+      activeRegex = LOCKED_TEXT_REGEX;
+    }
+  }
+  if (activeRegex && !activeRegex.test(cleaned)) {
+    return jsonError(403, "Forbidden: text outside allowed vocabulary", corsHeaders);
   }
 
   // 3. 校验音色白名单与语速
@@ -215,7 +283,7 @@ export async function onRequestGet(context: PagesContext): Promise<Response> {
     }
   }
 
-  // 6. 缓存未命中时，按客户端真实 IP 执行严格限流（防止恶意构造随机文本耗尽月度免费额度）
+  // 6. 缓存未命中时，按客户端真实 IP + 节点全局桶执行严格限流（防止恶意构造随机文本耗尽月度免费额度）
   const clientIp = request.headers.get("CF-Connecting-IP") ?? "unknown";
   if (!checkAndIncrementIpQuota(clientIp)) {
     return jsonError(429, "Rate limit exceeded for new speech synthesis", corsHeaders);
