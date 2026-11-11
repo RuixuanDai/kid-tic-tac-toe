@@ -310,8 +310,8 @@ class VoiceAnnouncer {
 
     if (typeof window !== 'undefined' && typeof window.OnlineNeuralTTS === 'function') {
       this.onlineTts = new window.OnlineNeuralTTS({
-        endpoint: '/api/tts',
-        fallbackEndpoint: 'https://kid-tic-tac-toe.pages.dev/api/tts',
+        endpoint: '/api/tts-k8m4',
+        fallbackEndpoint: 'https://kid-tic-tac-toe.pages.dev/api/tts-k8m4',
         rate: '-2%',
         autoUnlock: true
       });
